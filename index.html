@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Royal Caribbean Cruise Finder - Exclusive Cruise Discounts</title>
+  
+  <!-- Favicon using the SVG Logo asset for instant high-res rendering -->
+  <link rel="icon" type="image/svg+xml" href="logo.svg">
+
+  <!-- Google Font: Google Sans Flex -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,100..1000&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Google Sans Flex"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body.modal-active jdiv,
+    body.modal-active [class*="jivo"],
+    body.modal-active #jivo-iframe-container {
+      display: none !important;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans select-none relative">
+
+  <!-- Announcement Bar with Real-Time Countdown Timer -->
+  <div class="bg-pink-600 text-white text-xs font-bold py-2 px-4 text-center tracking-wider uppercase flex items-center justify-center flex-wrap gap-2">
+    <span>Promo Hub Flash Sale: Automatic Savings Locked Ends in:</span>
+    <span id="announcement-countdown" class="font-mono bg-black/20 px-2 py-0.5 rounded text-[11px] font-semibold tracking-normal">00h 00m 00s</span>
+  </div>
+
+  <!-- Main Navigation -->
+  <header class="bg-white border-b sticky top-0 z-40 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+      <!-- Crown SVG Logo and Title -->
+      <div class="flex items-center space-x-2 sm:space-x-3 shrink-0">
+        <img src="logo2.svg" alt="Royal Caribbean Cruise Logo" class="h-8 w-8 shrink-0">
+        <div class="flex flex-col">
+          <span class="text-base sm:text-xl font-black tracking-wider text-blue-900 leading-none">Royal Caribbean Cruise</span>
+          <span class="text-[9px] font-bold text-gray-400 tracking-widest uppercase mt-0.5">Deals Hub</span>
+        </div>
+      </div>
+
+      <!-- Desktop Navigation Links (Hidden on Mobile) -->
+      <nav class="hidden sm:flex space-x-6 text-sm font-semibold text-gray-700">
+        <a href="#quick-filter" class="hover:text-blue-900 transition-colors">Active Promos</a>
+        <a href="terms.html" target="_blank" class="hover:text-blue-900 transition-colors">Terms &amp; Conditions</a>
+      </nav>
+
+      <!-- Hamburger Button (Visible only on Mobile) -->
+      <button id="menu-toggle-btn" class="sm:hidden text-gray-700 hover:text-blue-900 focus:outline-none p-1 shrink-0" aria-label="Toggle Menu">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Mobile Dropdown Menu (Hidden by default) -->
+    <div id="mobile-menu" class="hidden sm:hidden w-full bg-white border-t border-gray-100 px-4 py-3 space-y-2 shadow-inner">
+      <a href="#quick-filter" class="block py-2 text-sm font-semibold text-gray-700 hover:text-blue-900 transition-colors">Active Promos</a>
+      <a href="terms.html" target="_blank" class="block py-2 text-sm font-semibold text-gray-700 hover:text-blue-900 transition-colors">Terms &amp; Conditions</a>
+    </div>
+  </header>
+
+  <!-- Hero Banner -->
+  <section class="relative bg-blue-950 text-white py-24 px-4 bg-cover bg-center" style="background-image: linear-gradient(rgba(10, 25, 47, 0.65), rgba(10, 25, 47, 0.85)), url('https://images.unsplash.com/photo-1548574505-5e239809ee19?auto=format&fit=crop&w=1920&q=80');">
+    <div class="max-w-4xl mx-auto text-center space-y-6">
+      <p class="text-xs font-black tracking-widest text-yellow-400 uppercase">Special Cruise Offer</p>
+      <h1 class="text-4xl md:text-6xl font-black uppercase tracking-tight leading-none">Instant Savings Finder</h1>
+      <p class="text-lg md:text-2xl font-semibold text-gray-200">
+        Up to <span class="text-pink-400 font-extrabold">$850 Off</span> + 3rd & 4th Guests Sail Free
+      </p>
+      <div class="pt-4">
+        <a href="#quick-filter" class="inline-block bg-yellow-400 hover:bg-yellow-500 text-blue-950 font-black px-8 py-3.5 rounded-full transition-all shadow-lg">
+          View Active Discounts
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Filter & Deals Section -->
+  <section id="quick-filter" class="max-w-7xl mx-auto px-4 py-16 space-y-8">
+    <div class="text-center space-y-2">
+      <h2 class="text-3xl font-black text-blue-950 uppercase">Current Promotional Sailings</h2>
+      <p class="text-gray-500 text-sm max-w-lg mx-auto">Filter through our active sailings to find your match.</p>
+    </div>
+
+    <!-- Live-Filter Tabs -->
+    <div id="filter-btn-container" class="flex flex-wrap justify-center gap-2 border-b pb-6">
+      <button data-category="all" class="filter-btn px-5 py-2.5 font-bold rounded-lg bg-blue-900 text-white shadow-sm transition-all text-sm">All Deals</button>
+      <button data-category="weekend" class="filter-btn px-5 py-2.5 font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition-all text-sm">Weekend Getaways</button>
+      <button data-category="caribbean" class="filter-btn px-5 py-2.5 font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition-all text-sm">Caribbean</button>
+      <button data-category="bahamas" class="filter-btn px-5 py-2.5 font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition-all text-sm">Bahamas</button>
+      <button data-category="bermuda" class="filter-btn px-5 py-2.5 font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition-all text-sm">Bermuda</button>
+      <button data-category="europe" class="filter-btn px-5 py-2.5 font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition-all text-sm">Europe</button>
+      <button data-category="alaska" class="filter-btn px-5 py-2.5 font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition-all text-sm">Alaska</button>
+      <button data-category="mexico" class="filter-btn px-5 py-2.5 font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition-all text-sm">Mexico</button>
+      <button data-category="canada" class="filter-btn px-5 py-2.5 font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition-all text-sm">Canada & New England</button>
+      <button data-category="panama" class="filter-btn px-5 py-2.5 font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition-all text-sm">Panama Canal</button>
+      <button data-category="hawaii" class="filter-btn px-5 py-2.5 font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition-all text-sm">Hawaii</button>
+      <button data-category="asia" class="filter-btn px-5 py-2.5 font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition-all text-sm">Asia</button>
+      <button data-category="australia" class="filter-btn px-5 py-2.5 font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition-all text-sm">Australia & New Zealand</button>
+    </div>
+
+    <!-- Advanced Interactive Filter Tool Belt -->
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+      <!-- Search Input -->
+      <div>
+        <label class="block text-xs font-bold uppercase text-gray-400 mb-2">Search Cruise Title</label>
+        <input type="text" id="search-input" class="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900" placeholder="e.g. Western Caribbean">
+      </div>
+
+      <!-- Ship Filter -->
+      <div>
+        <label class="block text-xs font-bold uppercase text-gray-400 mb-2">Select Ship</label>
+        <select id="ship-filter" class="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900 bg-white">
+          <option value="all">All Ships</option>
+        </select>
+      </div>
+
+      <!-- Port Search Input -->
+      <div>
+        <label class="block text-xs font-bold uppercase text-gray-400 mb-2">Filter By Port / Stop</label>
+        <input type="text" id="port-filter" class="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900" placeholder="e.g. St. John, Juneau">
+      </div>
+
+      <!-- Price Range Slider -->
+      <div class="space-y-2">
+        <div class="flex justify-between text-xs font-bold uppercase text-gray-400">
+          <span>Max Price (USD)</span>
+          <span id="price-limit-display" class="text-blue-900 font-black">$6,500</span>
+        </div>
+        <input type="range" id="price-filter" min="150" max="6500" value="6500" step="50" class="w-full accent-blue-900 h-2 bg-gray-200 rounded-lg cursor-pointer">
+      </div>
+    </div>
+
+    <!-- Active Filter Badges -->
+    <div id="filter-meta-info" class="text-sm font-semibold text-gray-500 hidden">
+      Showing <span id="filtered-count" class="font-extrabold text-blue-900">0</span> matching Deals.
+    </div>
+
+    <!-- Deals Grid -->
+    <div id="deals-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <!-- Populated dynamically via JS -->
+    </div>
+
+    <!-- Load More Button -->
+    <div id="load-more-container" class="text-center pt-10 hidden">
+      <button id="load-more-btn" class="bg-blue-900 hover:bg-blue-800 text-white font-bold px-8 py-3 rounded-xl transition-all text-sm shadow-md">
+        Load More Deals
+      </button>
+    </div>
+  </section>
+
+  <!-- Dynamic Purchase/Booking Modal -->
+  <div id="promo-modal" class="fixed inset-0 bg-black/60 flex items-center justify-center p-2 sm:p-4 z-50 hidden">
+    <!-- Static Outer Wrapper (flex-col, overflow-hidden) -->
+    <div id="modal-viewport-wrapper" class="bg-white max-w-5xl w-full rounded-2xl shadow-2xl relative flex flex-col max-h-[92vh] overflow-hidden">
+      
+      <!-- Close Button -->
+      <button id="close-modal-btn" class="absolute top-4 right-4 z-50 bg-white/10 hover:bg-white/20 md:bg-gray-100 md:hover:bg-gray-200 text-white md:text-gray-700 h-8 w-8 rounded-full flex items-center justify-center font-black transition-all">×</button>
+
+      <!-- Main Columns Scroll Area -->
+      <div id="modal-scroll-container" class="overflow-y-auto md:overflow-hidden flex flex-col md:flex-row flex-grow pb-24 md:pb-0 h-full">
+
+        <!-- LEFT COLUMN: Live Breakdown Summary Panel (Permanent Desktop Sidebar) -->
+        <div class="w-full md:w-2/5 bg-slate-50 border-r border-gray-100 flex flex-col shrink-0 md:overflow-y-auto md:max-h-[92vh]">
+          
+          <!-- Header Banner Block -->
+          <div class="bg-blue-950 text-white p-5 pr-14 shrink-0 relative">
+            <span class="bg-yellow-400 text-blue-950 text-[9px] font-black uppercase px-2 py-0.5 rounded tracking-wider">Lock Promo Price</span>
+            <h3 id="modal-cruise-title" class="text-base font-black uppercase tracking-tight mt-2 truncate">Configure Your Cruise</h3>
+            <p id="modal-cruise-ship" class="text-xs text-blue-200 font-medium mt-1 truncate">Icon of the Seas • Departing Jul 9, 2027</p>
+          </div>
+
+          <!-- Mobile Summary Accordion Toggler (Visible only on mobile) -->
+          <div class="md:hidden flex justify-between items-center p-4 border-b bg-slate-100 shrink-0">
+            <div>
+              <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Est. Price Total</span>
+              <p id="accordion-total-price" class="text-base font-black text-blue-950">$1,646.00</p>
+            </div>
+            <button id="toggle-summary-btn" class="bg-blue-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors">
+              Show Summary ▾
+            </button>
+          </div>
+
+          <!-- Price breakdown calculations -->
+          <div id="summary-breakdown-details" class="hidden md:block p-5 space-y-5 flex-grow">
+            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Real-time Fare Summary</p>
+
+            <div class="space-y-2 text-xs font-medium text-gray-600">
+              <div class="flex justify-between">
+                <span>Base Fare (<span id="summary-guest-count">2</span> Guests)</span>
+                <span id="summary-base-fare" class="font-bold text-gray-800">$2,246.00</span>
+              </div>
+              <div class="flex justify-between text-emerald-600 font-bold">
+                <span>Automatic Promos Locked</span>
+                <span id="summary-discounts">-$850.00</span>
+              </div>
+              <div class="flex justify-between">
+                <span>Taxes & Fees</span>
+                <span id="summary-taxes" class="font-bold text-gray-800">$250.00</span>
+              </div>
+              
+              <div class="border-t pt-3 flex justify-between items-baseline">
+                <span class="text-sm font-black text-gray-800">Estimated Total</span>
+                <div class="text-right">
+                  <span id="summary-estimated-total" class="text-xl font-black text-blue-900">$1,646.00</span>
+                  <span class="block text-[9px] text-gray-400 font-normal">USD Total / Includes Taxes</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Affirm Estimate Element -->
+            <div class="text-[11px] text-gray-500 bg-gray-100 p-3 rounded-lg border border-gray-200/50">
+              Or as low as <strong class="text-gray-800">$<span id="summary-affirm-est">55</span>/mo</strong> with 0% interest APR. 
+              <a href="#" class="text-blue-800 underline font-semibold ml-1">Learn More</a>
+            </div>
+
+            <!-- Visual Savings Badge -->
+            <div class="bg-emerald-50 border border-emerald-200 p-3 rounded-lg text-emerald-800 text-xs text-center font-bold">
+              🎉 You saved <span id="summary-savings-total">$850.00</span> on this reservation!
+            </div>
+
+            <!-- Promos Checklist -->
+            <div class="space-y-1">
+              <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Promos Snagged</p>
+              <div id="global-discount-badge-item" class="flex items-center text-[11px] text-gray-600 space-x-1.5 hidden">
+                <span class="text-emerald-500 font-bold">✓</span>
+                <span>Global <span id="summary-discount-percent">0</span>% Promo Applied</span>
+              </div>
+              <div class="flex items-center text-[11px] text-gray-600 space-x-1.5">
+                <span class="text-emerald-500 font-bold">✓</span>
+                <span>60% Off Second Guest</span>
+              </div>
+              <div class="flex items-center text-[11px] text-gray-600 space-x-1.5">
+                <span class="text-emerald-500 font-bold">✓</span>
+                <span>3rd & 4th Guests Sail Free</span>
+              </div>
+              <div class="flex items-center text-[11px] text-gray-600 space-x-1.5">
+                <span class="text-emerald-500 font-bold">✓</span>
+                <span>Exclusive Flash Saving -$150 Applied</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: Multi-Step Content View -->
+        <div class="w-full md:w-3/5 flex flex-col p-6 pb-6 bg-white md:overflow-y-auto md:max-h-[92vh]">
+          
+          <!-- Stepper Progress Tracker Header -->
+          <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-100 shrink-0">
+            <div class="flex items-center space-x-2">
+              <span id="step-dot-1" class="h-6 w-6 rounded-full bg-blue-900 text-white flex items-center justify-center text-xs font-bold transition-all">1</span>
+              <span id="step-label-1" class="text-xs font-bold text-blue-900 transition-all">Cabin</span>
+            </div>
+            <div class="flex-grow h-px bg-gray-200 mx-2"></div>
+            <div class="flex items-center space-x-2">
+              <span id="step-dot-2" class="h-6 w-6 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center text-xs font-bold transition-all">2</span>
+              <span id="step-label-2" class="text-xs font-bold text-gray-400 transition-all">Guests</span>
+            </div>
+            <div class="flex-grow h-px bg-gray-200 mx-2"></div>
+            <div class="flex items-center space-x-2">
+              <span id="step-dot-3" class="h-6 w-6 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center text-xs font-bold transition-all">3</span>
+              <span id="step-label-3" class="text-xs font-bold text-gray-400 transition-all">Review</span>
+            </div>
+          </div>
+
+          <!-- Master Steps Container -->
+          <div id="express-form-container" class="flex-grow">
+            
+            <!-- STEP 1: CABIN EXPERIENCE SELECTION -->
+            <div id="step-1-view" class="space-y-6">
+              <!-- Party Configuration Input (Placed at Top for Real-time price updating) -->
+              <div>
+                <label class="block text-xs font-black uppercase text-gray-400 mb-2 tracking-wider">Number of Guests</label>
+                <select id="guest-count-select" class="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900 bg-white">
+                  <option value="1">1 Adult</option>
+                  <option value="2" selected>2 Guests (Recommended)</option>
+                  <option value="3">3 Guests (3rd Sails Free)</option>
+                  <option value="4">4 Guests (3rd/4th Sail Free)</option>
+                </select>
+              </div>
+
+              <div class="space-y-2">
+                <label class="block text-xs font-black uppercase text-gray-400 tracking-wider">Select Cabin Experience</label>
+                <!-- Compact Vertical Layout for Mobile, Multi-column Grid on Desktop -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  
+                  <!-- Interior -->
+                  <label class="border border-gray-200 rounded-xl overflow-hidden flex items-center hover:border-blue-900 cursor-pointer transition-all relative bg-white p-2">
+                    <input type="radio" name="stateroom" value="Interior" checked class="absolute top-2 right-2 accent-blue-900 h-4 w-4">
+                    <img src="https://assets.dm.rccl.com/is/image/RoyalCaribbeanCruises/content/dam/royal/accommodations/iobd/interior-1440.jpg?$800x450$" class="h-14 w-20 object-cover rounded-lg shrink-0">
+                    <div class="ml-3 flex-grow min-w-0">
+                      <h4 class="font-bold text-sm text-gray-800 truncate">Interior</h4>
+                      <p class="text-[10px] text-gray-400 font-bold">👥 Sleeps 1-4</p>
+                      <p class="text-xs font-black text-blue-900 mt-0.5"><span id="modal-interior-price">$1,123</span> <span class="text-[9px] font-normal text-gray-400">USD</span></p>
+                    </div>
+                  </label>
+
+                  <!-- Ocean View -->
+                  <label class="border border-gray-200 rounded-xl overflow-hidden flex items-center hover:border-blue-900 cursor-pointer transition-all relative bg-white p-2">
+                    <input type="radio" name="stateroom" value="Outside View" class="absolute top-2 right-2 accent-blue-900 h-4 w-4">
+                    <img src="https://assets.dm.rccl.com/is/image/RoyalCaribbeanCruises/content/dam/royal/accommodations/iobd/oceanview-1440.jpg?$800x450$" class="h-14 w-20 object-cover rounded-lg shrink-0">
+                    <div class="ml-3 flex-grow min-w-0">
+                      <h4 class="font-bold text-sm text-gray-800 truncate">Outside View</h4>
+                      <p class="text-[10px] text-gray-400 font-bold">👥 Sleeps 1-6</p>
+                      <p class="text-xs font-black text-blue-900 mt-0.5"><span id="modal-outside-price">$1,363</span> <span class="text-[9px] font-normal text-gray-400">USD</span></p>
+                    </div>
+                  </label>
+
+                  <!-- Balcony -->
+                  <label class="border border-gray-200 rounded-xl overflow-hidden flex items-center hover:border-blue-900 cursor-pointer transition-all relative bg-white p-2">
+                    <input type="radio" name="stateroom" value="Balcony" class="absolute top-2 right-2 accent-blue-900 h-4 w-4">
+                    <img src="https://assets.dm.rccl.com/is/image/RoyalCaribbeanCruises/content/dam/royal/accommodations/iobd/balcony-1440.jpg?$800x450$" class="h-14 w-20 object-cover rounded-lg shrink-0">
+                    <div class="ml-3 flex-grow min-w-0">
+                      <h4 class="font-bold text-sm text-gray-800 truncate">Balcony</h4>
+                      <p class="text-[10px] text-gray-400 font-bold">👥 Sleeps 1-4</p>
+                      <p class="text-xs font-black text-blue-900 mt-0.5"><span id="modal-balcony-price">$1,335</span> <span class="text-[9px] font-normal text-gray-400">USD</span></p>
+                    </div>
+                  </label>
+
+                  <!-- Luxury Suite -->
+                  <label class="border border-gray-200 rounded-xl overflow-hidden flex items-center hover:border-blue-900 cursor-pointer transition-all relative bg-white p-2">
+                    <input type="radio" name="stateroom" value="Suite" class="absolute top-2 right-2 accent-blue-900 h-4 w-4">
+                    <img src="https://assets.dm.rccl.com/is/image/RoyalCaribbeanCruises/content/dam/royal/accommodations/iobd/suite-1440.jpg?$800x450$" class="h-14 w-20 object-cover rounded-lg shrink-0">
+                    <div class="ml-3 flex-grow min-w-0">
+                      <h4 class="font-bold text-sm text-gray-800 truncate">Luxury Suite</h4>
+                      <p class="text-[10px] text-gray-400 font-bold">👥 Sleeps 1-8</p>
+                      <p class="text-xs font-black text-blue-900 mt-0.5"><span id="modal-suite-price">$3,185</span> <span class="text-[9px] font-normal text-gray-400">USD</span></p>
+                    </div>
+                  </label>
+
+                </div>
+              </div>
+            </div>
+
+            <!-- STEP 2: TRAVELER & GUEST INFO -->
+            <div id="step-2-view" class="space-y-6 hidden">
+              <p class="text-xs font-black uppercase text-blue-900 tracking-wider">Lead Guest Info</p>
+              
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-black uppercase text-gray-400 mb-2 tracking-wider">Lead Guest Name</label>
+                  <input type="text" id="guest-name" required class="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900 bg-white" placeholder="Jane Doe">
+                </div>
+                <div>
+                  <label class="block text-xs font-black uppercase text-gray-400 mb-2 tracking-wider">Country of Residence</label>
+                  <input type="text" id="guest-country" required class="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900 bg-white" placeholder="e.g. United States">
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-black uppercase text-gray-400 mb-2 tracking-wider">Email Address</label>
+                  <input type="email" id="guest-email" required class="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900 bg-white" placeholder="guest@example.com">
+                </div>
+                <div>
+                  <label class="block text-xs font-black uppercase text-gray-400 mb-2 tracking-wider">Phone Number</label>
+                  <input type="tel" id="guest-phone" required class="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900 bg-white" placeholder="+1 (555) 000-0000">
+                </div>
+              </div>
+
+              <!-- Loyalty Optional Field -->
+              <div>
+                <label class="block text-xs font-black uppercase text-gray-400 mb-2 tracking-wider">Crown &amp; Anchor Loyalty # <span class="text-[10px] font-normal lowercase text-gray-400 italic">(optional)</span></label>
+                <input type="text" id="guest-loyalty" class="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900 bg-white" placeholder="Enter Loyalty Membership Number">
+              </div>
+
+              <!-- Dynamic Additional Passenger Forms (Populated via JS) -->
+              <div id="additional-guests-container" class="space-y-4 border-t border-gray-100 pt-4 hidden"></div>
+            </div>
+
+            <!-- STEP 3: REVIEW & LOCK HOLD -->
+            <div id="step-3-view" class="space-y-6 hidden">
+              <p class="text-xs font-black uppercase text-blue-900 tracking-wider">Review Your Booking Hold</p>
+              
+              <!-- Review Cards Wrapper (Populated via JS) -->
+              <div id="step-3-review-container"></div>
+
+              <!-- Disclaimer Details -->
+              <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl text-blue-950 text-xs leading-relaxed space-y-1">
+                <p class="font-bold">🔒 No Immediate Payment Necessary</p>
+                <p>Our dynamic portal lets you hold and guarantee promotional prices for 24 hours without submitting immediate payment. You will receive an invoice directly via email with confirmation documentation.</p>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Bottom Navigation Controls Wrapper -->
+          <div id="modal-nav-controls" class="flex items-center justify-between pt-6 border-t border-gray-100 mt-6 shrink-0">
+            <button id="prev-step-btn" class="hidden border border-gray-200 hover:bg-gray-50 text-gray-700 font-bold px-6 py-3 rounded-xl text-xs uppercase tracking-wider transition-colors">Back</button>
+            <button id="next-step-btn" class="hidden md:inline-block ml-auto bg-blue-900 hover:bg-blue-800 text-white font-black px-6 py-3.5 rounded-xl text-xs uppercase tracking-wider transition-colors">Continue to Guests ➔</button>
+          </div>
+
+          <!-- Submission Loading Viewport State -->
+          <div id="booking-loading" class="hidden flex-grow flex flex-col justify-center items-center py-12 space-y-4">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900"></div>
+            <p class="text-sm font-bold text-gray-500">Securing dynamic cabin holdings with carrier...</p>
+          </div>
+
+          <!-- Submission Success Viewport State -->
+          <div id="booking-success" class="hidden flex-grow flex flex-col justify-center items-center py-8 space-y-6 text-center">
+            <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 text-3xl font-bold shadow-sm">✓</div>
+            <div class="space-y-1">
+              <h4 class="text-2xl font-black text-blue-950 uppercase">Reservation Hold Locked!</h4>
+              <p class="text-sm text-gray-500 max-w-sm mx-auto">
+                Your promotional rate of <strong id="summary-success-final-price" class="text-blue-900">$1,646.00</strong> has been successfully held.
+              </p>
+            </div>
+            
+            <div class="bg-gray-50 p-4 rounded-xl inline-block border text-left text-xs space-y-1 shadow-inner">
+              <p><strong>Primary Lead:</strong> <span id="summary-name" class="font-medium text-gray-800">Jane Doe</span></p>
+              <p><strong>Option Selection:</strong> <span id="summary-room-type" class="font-medium text-gray-800">Interior Room</span></p>
+              <p><strong>Hold Reference Code:</strong> <span id="summary-hold-code" class="font-mono bg-blue-900 text-white px-2 py-0.5 rounded text-[10px]">RPL-849204</span></p>
+            </div>
+
+            <p class="text-[11px] text-gray-400 italic">Please check your email to complete payment, or contact our support chatbot with your Hold Reference Code to pay and lock your cabin permanently.</p>
+            
+            <button id="success-close-btn" class="bg-blue-900 hover:bg-blue-800 text-white font-black px-8 py-3 rounded-xl transition-all text-sm uppercase tracking-wider">
+              Close Panel
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- MOBILE ONLY: DYNAMIC STICKY FOOTER BAR -->
+      <div id="mobile-sticky-footer" class="md:hidden absolute bottom-0 left-0 right-0 bg-white border-t p-4 flex justify-between items-center z-50 shadow-lg">
+        <div>
+          <span class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Estimated Total</span>
+          <p id="sticky-mobile-total" class="text-lg font-black text-blue-900">$1,646.00</p>
+        </div>
+        <button id="mobile-next-step-btn" class="bg-blue-900 hover:bg-blue-800 text-white text-xs font-black px-5 py-3 rounded-xl uppercase tracking-wider">
+          Continue to Guests
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Dynamic Live Notification Feed -->
+  <div id="live-activity-container" class="fixed top-20 left-4 right-4 sm:top-auto sm:bottom-6 sm:left-6 sm:right-auto z-50 pointer-events-none max-w-sm w-auto sm:w-full space-y-3"></div>
+
+  <!-- Simplified Footer -->
+  <footer class="bg-gray-100 border-t py-8 text-center text-xs text-gray-400">
+    <p>© 2026 Royal Caribbean Cruise Finder. All rights reserved.</p>
+  </footer>
+
+  <script type="module" src="js/app.js"></script>
+  <!-- JivoChat Support Widget -->
+  <script src="//code.jivosite.com/widget/LIS88yAolR" async></script>
+</body>
+</html>

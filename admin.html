@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Promo Hub - Admin Panel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6 min-h-screen flex flex-col justify-center">
+
+  <!-- 1. Centered Admin Login Form (Visible when Logged Out) -->
+  <div id="login-section" class="max-w-md w-full mx-auto bg-white p-8 rounded-xl shadow-md space-y-6 hidden">
+    <div class="text-center">
+      <h2 class="text-2xl font-black text-blue-900 uppercase">Admin Login</h2>
+      <p class="text-gray-500 text-xs mt-1">Please enter your credentials to manage promotions.</p>
+    </div>
+    
+    <form id="login-form" class="space-y-4">
+      <div>
+        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Email Address</label>
+        <input type="email" id="login-email" required class="w-full border p-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900" placeholder="admin@test.com">
+      </div>
+      <div>
+        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Password</label>
+        <input type="password" id="login-password" required class="w-full border p-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900" placeholder="••••••••">
+      </div>
+      <button type="submit" id="login-btn" class="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold py-3 rounded-lg transition-colors">
+        Log In
+      </button>
+    </form>
+  </div>
+
+  <!-- 2. Admin Dashboard (Visible when Logged In) -->
+  <div id="dashboard-section" class="max-w-6xl w-full mx-auto space-y-8 hidden">
+    
+    <!-- Dashboard Header with Log Out -->
+    <div class="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm">
+      <h1 class="text-2xl font-black text-blue-900">PROMO HUB ADMIN</h1>
+      <div class="flex items-center space-x-4">
+        <a href="index.html" class="text-sm font-semibold text-gray-600 hover:text-blue-900">← View Public Site</a>
+        <button id="logout-btn" class="bg-red-500 hover:bg-red-600 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors">
+          Log Out
+        </button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <!-- Form to Add Deal -->
+      <div class="md:col-span-2 bg-white p-6 rounded-xl shadow-sm space-y-4">
+        <h2 class="text-lg font-bold border-b pb-2">Add New Promo Deal</h2>
+        
+        <form id="add-deal-form" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Deal Title</label>
+            <input type="text" id="title" required class="w-full border p-2 rounded-lg" placeholder="e.g., 4 Nights Perfect Day CocoCay">
+          </div>
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Ship Name</label>
+              <input type="text" id="ship" required class="w-full border p-2 rounded-lg" placeholder="e.g., Star of the Seas">
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Departure Port</label>
+              <input type="text" id="port" required class="w-full border p-2 rounded-lg" placeholder="e.g., Port Canaveral, FL">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-5 gap-4">
+            <div>
+              <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Starting Price (USD)</label>
+              <input type="number" id="price" required class="w-full border p-2 rounded-lg" placeholder="e.g., 389">
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Duration</label>
+              <input type="text" id="duration" required class="w-full border p-2 rounded-lg" placeholder="e.g., 7 Nights">
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Departure Date</label>
+              <input type="text" id="departureDate" required class="w-full border p-2 rounded-lg" placeholder="e.g., Sep 4, 2026">
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Category</label>
+              <select id="category" class="w-full border p-2 rounded-lg bg-white">
+                <option value="weekend">Weekend Getaway</option>
+                <option value="caribbean">Caribbean</option>
+                <option value="bahamas">Bahamas</option>
+                <option value="bermuda">Bermuda</option>
+                <option value="europe">Europe</option>
+                <option value="alaska">Alaska</option>
+                <option value="mexico">Mexico</option>
+                <option value="canada">Canada & New England</option>
+                <option value="panama">Panama Canal</option>
+                <option value="hawaii">Hawaii</option>
+                <option value="asia">Asia</option>
+                <option value="australia">Australia & New Zealand</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Status</label>
+              <select id="status" class="w-full border p-2 rounded-lg bg-white">
+                <option value="active">Active (Published)</option>
+                <option value="draft">Draft (Hidden)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Individual Cabin Prices Grid Row -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Interior Price</label>
+              <input type="number" id="interiorPrice" required class="w-full border p-2 rounded-lg" placeholder="e.g., 1123">
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Outside Price</label>
+              <input type="number" id="outsidePrice" required class="w-full border p-2 rounded-lg" placeholder="e.g., 1363">
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Balcony Price</label>
+              <input type="number" id="balconyPrice" required class="w-full border p-2 rounded-lg" placeholder="e.g., 1335">
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Suite Price</label>
+              <input type="number" id="suitePrice" required class="w-full border p-2 rounded-lg" placeholder="e.g., 3185">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Promo Image</label>
+            <input type="file" id="image-file" accept="image/*" class="w-full border p-2 rounded-lg">
+          </div>
+
+          <button type="submit" id="submit-btn" class="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold py-3 rounded-lg transition-colors">
+            Publish Promotion
+          </button>
+          <button type="button" id="cancel-edit-btn" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 rounded-lg transition-colors hidden mt-2">
+            Cancel Edit
+          </button>
+        </form>
+      </div>
+
+      <!-- Current Deals Sidebar -->
+      <div class="bg-white p-6 rounded-xl shadow-sm space-y-4">
+        <h2 class="text-lg font-bold border-b pb-2">Active Promos</h2>
+        <div id="admin-deals-list" class="space-y-4 max-h-[500px] overflow-y-auto">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Reservations Section -->
+    <div class="bg-white p-6 rounded-xl shadow-sm space-y-4">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-4 gap-4">
+        <div>
+          <h2 class="text-lg font-bold">Active Reservation Holds</h2>
+          <span id="reservation-count-badge" class="bg-blue-100 text-blue-800 text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">0 Holds</span>
+        </div>
+        
+        <!-- Interactive Quick Filters & CSV Export Toolbar -->
+        <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          <!-- Filter Tabs -->
+          <div class="flex bg-gray-100 p-1 rounded-xl border shrink-0">
+            <button id="filter-res-all" class="res-filter-btn px-3 py-1.5 text-xs font-bold rounded-lg bg-white shadow-sm text-blue-900 transition-all">All</button>
+            <button id="filter-res-active" class="res-filter-btn px-3 py-1.5 text-xs font-semibold rounded-lg text-gray-600 hover:text-blue-900 transition-all">Active</button>
+            <button id="filter-res-paid" class="res-filter-btn px-3 py-1.5 text-xs font-semibold rounded-lg text-gray-600 hover:text-blue-900 transition-all">Paid</button>
+            <button id="filter-res-expired" class="res-filter-btn px-3 py-1.5 text-xs font-semibold rounded-lg text-gray-600 hover:text-blue-900 transition-all">Expired</button>
+          </div>
+          <!-- CSV Downloader -->
+          <button id="export-csv-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-3 rounded-xl text-xs uppercase tracking-wider transition-all flex items-center space-x-1.5">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span>Export CSV</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr class="bg-gray-50 uppercase text-gray-500 font-bold border-b">
+              <th class="p-3">Reference / Status</th>
+              <th class="p-3">Lead Guest</th>
+              <th class="p-3">Sailing Details</th>
+              <th class="p-3">Pricing</th>
+              <th class="p-3">Hold Details</th>
+              <th class="p-3 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="admin-reservations-list" class="divide-y divide-gray-100">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Bottom Settings & Import Section Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      
+      <!-- Global Discount Settings Section -->
+      <div class="bg-white p-6 rounded-xl shadow-sm space-y-4">
+        <h2 class="text-lg font-bold border-b pb-2">Global Discount Settings</h2>
+        <p class="text-xs text-gray-500">Apply a global percentage discount across active promotions displayed on the public site.</p>
+        
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Discount Percentage (%)</label>
+            <input type="number" id="discount-percent" min="0" max="100" class="w-full border p-2 rounded-lg" placeholder="e.g., 30">
+          </div>
+          
+          <div class="flex items-center space-x-2">
+            <input type="checkbox" id="discount-active" class="w-4 h-4 text-blue-900 border-gray-300 rounded focus:ring-blue-900">
+            <label for="discount-active" class="text-xs font-bold uppercase text-gray-500 select-none">Enable Global Discount</label>
+          </div>
+
+          <button type="button" id="save-discount-btn" class="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold py-2.5 rounded-lg text-xs transition-colors">
+            Save Discount Settings
+          </button>
+        </div>
+      </div>
+
+      <!-- Bulk Import Section -->
+      <div class="bg-white p-6 rounded-xl shadow-sm space-y-4">
+        <h2 class="text-lg font-bold border-b pb-2">Bulk JSON Import</h2>
+        <p class="text-xs text-gray-500">Select a local JSON file containing an array of cruise objects to populate your database instantly.</p>
+        
+        <div class="space-y-3">
+          <input type="file" id="bulk-json-file" accept=".json" class="w-full border p-2 rounded-lg text-xs">
+          <button type="button" id="bulk-import-btn" class="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 rounded-lg text-xs transition-colors">
+            Start Bulk Import
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script type="module" src="js/admin.js"></script>
+</body>
+</html>
