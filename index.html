@@ -285,7 +285,7 @@
             
             <!-- STEP 1: CABIN EXPERIENCE SELECTION -->
             <div id="step-1-view" class="space-y-6">
-              <!-- Party Configuration Input (Placed at Top for Real-time price updating) -->
+              <!-- Party Configuration Input -->
               <div>
                 <label class="block text-xs font-black uppercase text-gray-400 mb-2 tracking-wider">Number of Guests</label>
                 <select id="guest-count-select" class="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900 bg-white">
@@ -298,50 +298,115 @@
 
               <div class="space-y-2">
                 <label class="block text-xs font-black uppercase text-gray-400 tracking-wider">Select Cabin Experience</label>
-                <!-- Compact Vertical Layout for Mobile, Multi-column Grid on Desktop -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                
+                <!-- Modern Visual Grid Layout -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   
                   <!-- Interior -->
-                  <label class="border border-gray-200 rounded-xl overflow-hidden flex items-center hover:border-blue-900 cursor-pointer transition-all relative bg-white p-2">
-                    <input type="radio" name="stateroom" value="Interior" checked class="absolute top-2 right-2 accent-blue-900 h-4 w-4">
-                    <img src="https://assets.dm.rccl.com/is/image/RoyalCaribbeanCruises/content/dam/royal/accommodations/iobd/interior-1440.jpg?$800x450$" class="h-14 w-20 object-cover rounded-lg shrink-0">
-                    <div class="ml-3 flex-grow min-w-0">
-                      <h4 class="font-bold text-sm text-gray-800 truncate">Interior</h4>
-                      <p class="text-[10px] text-gray-400 font-bold">👥 Sleeps 1-4</p>
-                      <p class="text-xs font-black text-blue-900 mt-0.5"><span id="modal-interior-price">$1,123</span> <span class="text-[9px] font-normal text-gray-400">USD</span></p>
+                  <label class="border border-gray-200 rounded-xl overflow-hidden flex flex-col hover:border-blue-900 cursor-pointer transition-all relative bg-white pb-3 shadow-sm">
+                    <input type="radio" name="stateroom" value="Interior" checked class="absolute top-2.5 right-2.5 accent-blue-900 h-4 w-4 z-10">
+                    <img src="https://assets.dm.rccl.com/is/image/RoyalCaribbeanCruises/content/dam/royal/accommodations/iobd/interior-1440.jpg?$800x450$" class="h-28 w-full object-cover shrink-0">
+                    <div class="p-3 flex-grow flex flex-col justify-between">
+                      <div>
+                        <h4 class="font-bold text-sm text-gray-800 leading-tight">Interior</h4>
+                        <p class="text-[10px] text-gray-400 font-bold mb-2">👥 Sleeps 1-4</p>
+                        <ul class="text-[11px] text-gray-500 space-y-1 list-none pl-0">
+                          <li class="flex items-start">
+                            <span class="text-emerald-500 mr-1 shrink-0">✓</span>
+                            <span>Our most budget-friendly option</span>
+                          </li>
+                          <li class="flex items-start">
+                            <span class="text-emerald-500 mr-1 shrink-0">✓</span>
+                            <span>Cozy and comfortable retreat</span>
+                          </li>
+                          <li class="flex items-start">
+                            <span class="text-emerald-500 mr-1 shrink-0">✓</span>
+                            <span>150 - 270 sq. ft. stateroom</span>
+                          </li>
+                        </ul>
+                      </div>
+                      <p class="text-sm font-black text-blue-900 mt-3"><span id="modal-interior-price">$1,123</span> <span class="text-[9px] font-normal text-gray-400">USD</span></p>
                     </div>
                   </label>
 
                   <!-- Ocean View -->
-                  <label class="border border-gray-200 rounded-xl overflow-hidden flex items-center hover:border-blue-900 cursor-pointer transition-all relative bg-white p-2">
-                    <input type="radio" name="stateroom" value="Outside View" class="absolute top-2 right-2 accent-blue-900 h-4 w-4">
-                    <img src="https://assets.dm.rccl.com/is/image/RoyalCaribbeanCruises/content/dam/royal/accommodations/iobd/oceanview-1440.jpg?$800x450$" class="h-14 w-20 object-cover rounded-lg shrink-0">
-                    <div class="ml-3 flex-grow min-w-0">
-                      <h4 class="font-bold text-sm text-gray-800 truncate">Outside View</h4>
-                      <p class="text-[10px] text-gray-400 font-bold">👥 Sleeps 1-6</p>
-                      <p class="text-xs font-black text-blue-900 mt-0.5"><span id="modal-outside-price">$1,363</span> <span class="text-[9px] font-normal text-gray-400">USD</span></p>
+                  <label class="border border-gray-200 rounded-xl overflow-hidden flex flex-col hover:border-blue-900 cursor-pointer transition-all relative bg-white pb-3 shadow-sm">
+                    <input type="radio" name="stateroom" value="Outside View" class="absolute top-2.5 right-2.5 accent-blue-900 h-4 w-4 z-10">
+                    <img src="https://assets.dm.rccl.com/is/image/RoyalCaribbeanCruises/content/dam/royal/accommodations/iobd/oceanview-1440.jpg?$800x450$" class="h-28 w-full object-cover shrink-0">
+                    <div class="p-3 flex-grow flex flex-col justify-between">
+                      <div>
+                        <h4 class="font-bold text-sm text-gray-800 leading-tight">Outside View</h4>
+                        <p class="text-[10px] text-gray-400 font-bold mb-2">👥 Sleeps 1-6</p>
+                        <ul class="text-[11px] text-gray-500 space-y-1 list-none pl-0">
+                          <li class="flex items-start">
+                            <span class="text-emerald-500 mr-1 shrink-0">✓</span>
+                            <span>Endless views from stateroom window</span>
+                          </li>
+                          <li class="flex items-start">
+                            <span class="text-emerald-500 mr-1 shrink-0">✓</span>
+                            <span>Great for families with small children</span>
+                          </li>
+                          <li class="flex items-start">
+                            <span class="text-emerald-500 mr-1 shrink-0">✓</span>
+                            <span>174 - 364 sq. ft. stateroom</span>
+                          </li>
+                        </ul>
+                      </div>
+                      <p class="text-sm font-black text-blue-900 mt-3"><span id="modal-outside-price">$1,363</span> <span class="text-[9px] font-normal text-gray-400">USD</span></p>
                     </div>
                   </label>
 
                   <!-- Balcony -->
-                  <label class="border border-gray-200 rounded-xl overflow-hidden flex items-center hover:border-blue-900 cursor-pointer transition-all relative bg-white p-2">
-                    <input type="radio" name="stateroom" value="Balcony" class="absolute top-2 right-2 accent-blue-900 h-4 w-4">
-                    <img src="https://assets.dm.rccl.com/is/image/RoyalCaribbeanCruises/content/dam/royal/accommodations/iobd/balcony-1440.jpg?$800x450$" class="h-14 w-20 object-cover rounded-lg shrink-0">
-                    <div class="ml-3 flex-grow min-w-0">
-                      <h4 class="font-bold text-sm text-gray-800 truncate">Balcony</h4>
-                      <p class="text-[10px] text-gray-400 font-bold">👥 Sleeps 1-4</p>
-                      <p class="text-xs font-black text-blue-900 mt-0.5"><span id="modal-balcony-price">$1,335</span> <span class="text-[9px] font-normal text-gray-400">USD</span></p>
+                  <label class="border border-gray-200 rounded-xl overflow-hidden flex flex-col hover:border-blue-900 cursor-pointer transition-all relative bg-white pb-3 shadow-sm">
+                    <input type="radio" name="stateroom" value="Balcony" class="absolute top-2.5 right-2.5 accent-blue-900 h-4 w-4 z-10">
+                    <img src="https://assets.dm.rccl.com/is/image/RoyalCaribbeanCruises/content/dam/royal/accommodations/iobd/balcony-1440.jpg?$800x450$" class="h-28 w-full object-cover shrink-0">
+                    <div class="p-3 flex-grow flex flex-col justify-between">
+                      <div>
+                        <h4 class="font-bold text-sm text-gray-800 leading-tight">Balcony</h4>
+                        <p class="text-[10px] text-gray-400 font-bold mb-2">👥 Sleeps 1-4</p>
+                        <ul class="text-[11px] text-gray-500 space-y-1 list-none pl-0">
+                          <li class="flex items-start">
+                            <span class="text-emerald-500 mr-1 shrink-0">✓</span>
+                            <span>Crowd Fave: Most popular option</span>
+                          </li>
+                          <li class="flex items-start">
+                            <span class="text-emerald-500 mr-1 shrink-0">✓</span>
+                            <span>Private layout overlooking ocean breeze</span>
+                          </li>
+                          <li class="flex items-start">
+                            <span class="text-emerald-500 mr-1 shrink-0">✓</span>
+                            <span>181 - 304 sq. ft. stateroom</span>
+                          </li>
+                        </ul>
+                      </div>
+                      <p class="text-sm font-black text-blue-900 mt-3"><span id="modal-balcony-price">$1,335</span> <span class="text-[9px] font-normal text-gray-400">USD</span></p>
                     </div>
                   </label>
 
                   <!-- Luxury Suite -->
-                  <label class="border border-gray-200 rounded-xl overflow-hidden flex items-center hover:border-blue-900 cursor-pointer transition-all relative bg-white p-2">
-                    <input type="radio" name="stateroom" value="Suite" class="absolute top-2 right-2 accent-blue-900 h-4 w-4">
-                    <img src="https://assets.dm.rccl.com/is/image/RoyalCaribbeanCruises/content/dam/royal/accommodations/iobd/suite-1440.jpg?$800x450$" class="h-14 w-20 object-cover rounded-lg shrink-0">
-                    <div class="ml-3 flex-grow min-w-0">
-                      <h4 class="font-bold text-sm text-gray-800 truncate">Luxury Suite</h4>
-                      <p class="text-[10px] text-gray-400 font-bold">👥 Sleeps 1-8</p>
-                      <p class="text-xs font-black text-blue-900 mt-0.5"><span id="modal-suite-price">$3,185</span> <span class="text-[9px] font-normal text-gray-400">USD</span></p>
+                  <label class="border border-gray-200 rounded-xl overflow-hidden flex flex-col hover:border-blue-900 cursor-pointer transition-all relative bg-white pb-3 shadow-sm">
+                    <input type="radio" name="stateroom" value="Suite" class="absolute top-2.5 right-2.5 accent-blue-900 h-4 w-4 z-10">
+                    <img src="https://assets.dm.rccl.com/is/image/RoyalCaribbeanCruises/content/dam/royal/accommodations/iobd/suite-1440.jpg?$800x450$" class="h-28 w-full object-cover shrink-0">
+                    <div class="p-3 flex-grow flex flex-col justify-between">
+                      <div>
+                        <h4 class="font-bold text-sm text-gray-800 leading-tight">Luxury Suite</h4>
+                        <p class="text-[10px] text-gray-400 font-bold mb-2">👥 Sleeps 1-8</p>
+                        <ul class="text-[11px] text-gray-500 space-y-1 list-none pl-0">
+                          <li class="flex items-start">
+                            <span class="text-emerald-500 mr-1 shrink-0">✓</span>
+                            <span>Live the high-end, classic 'suite' life</span>
+                          </li>
+                          <li class="flex items-start">
+                            <span class="text-emerald-500 mr-1 shrink-0">✓</span>
+                            <span>Luxury spaces and inclusive amenities</span>
+                          </li>
+                          <li class="flex items-start">
+                            <span class="text-emerald-500 mr-1 shrink-0">✓</span>
+                            <span>301 - 2604 sq. ft. stateroom</span>
+                          </li>
+                        </ul>
+                      </div>
+                      <p class="text-sm font-black text-blue-900 mt-3"><span id="modal-suite-price">$3,185</span> <span class="text-[9px] font-normal text-gray-400">USD</span></p>
                     </div>
                   </label>
 
@@ -381,7 +446,7 @@
                 <input type="text" id="guest-loyalty" class="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900 bg-white" placeholder="Enter Loyalty Membership Number">
               </div>
 
-              <!-- Dynamic Additional Passenger Forms (Populated via JS) -->
+              <!-- Dynamic Additional Passenger Forms -->
               <div id="additional-guests-container" class="space-y-4 border-t border-gray-100 pt-4 hidden"></div>
             </div>
 
@@ -389,7 +454,7 @@
             <div id="step-3-view" class="space-y-6 hidden">
               <p class="text-xs font-black uppercase text-blue-900 tracking-wider">Review Your Booking Hold</p>
               
-              <!-- Review Cards Wrapper (Populated via JS) -->
+              <!-- Review Cards Wrapper -->
               <div id="step-3-review-container"></div>
 
               <!-- Disclaimer Details -->

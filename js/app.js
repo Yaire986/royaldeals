@@ -446,9 +446,9 @@ function openDealModal(deal) {
   stateroomRadios.forEach(r => {
     const label = r.closest('label');
     if (r.checked) {
-      label.className = "border-2 border-blue-900 rounded-xl overflow-hidden flex items-center cursor-pointer transition-all relative bg-white p-2 shadow-sm ring-2 ring-blue-900/10";
+      label.className = "border-2 border-blue-900 rounded-xl overflow-hidden flex flex-col cursor-pointer transition-all relative bg-white pb-3 shadow-sm ring-2 ring-blue-900/10";
     } else {
-      label.className = "border border-gray-200 rounded-xl overflow-hidden flex items-center hover:border-blue-900 cursor-pointer transition-all relative bg-white p-2";
+      label.className = "border border-gray-200 rounded-xl overflow-hidden flex flex-col hover:border-blue-900 cursor-pointer transition-all relative bg-white pb-3 shadow-sm";
     }
   });
 
@@ -581,9 +581,9 @@ function setupClaimListeners() {
     stateroomRadios.forEach(r => {
       const label = r.closest('label');
       if (r.checked) {
-        label.className = "border-2 border-blue-900 rounded-xl overflow-hidden flex items-center cursor-pointer transition-all relative bg-white p-2 shadow-sm ring-2 ring-blue-900/10";
+        label.className = "border-2 border-blue-900 rounded-xl overflow-hidden flex flex-col cursor-pointer transition-all relative bg-white pb-3 shadow-sm ring-2 ring-blue-900/10";
       } else {
-        label.className = "border border-gray-200 rounded-xl overflow-hidden flex items-center hover:border-blue-900 cursor-pointer transition-all relative bg-white p-2";
+        label.className = "border border-gray-200 rounded-xl overflow-hidden flex flex-col hover:border-blue-900 cursor-pointer transition-all relative bg-white pb-3 shadow-sm";
       }
     });
   }
