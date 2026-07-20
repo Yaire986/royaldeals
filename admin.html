@@ -125,6 +125,12 @@
             </div>
           </div>
 
+          <!-- Sailing Dates (JSON paste field for dates.json mapping) -->
+          <div>
+            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Sailing Dates (Paste dates.json contents)</label>
+            <textarea id="datesJson" class="w-full border p-2 rounded-lg text-xs h-32 font-mono focus:outline-none focus:ring-2 focus:ring-blue-900 bg-white" placeholder='Paste your dates.json array here...'></textarea>
+          </div>
+
           <div>
             <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Promo Image</label>
             <input type="file" id="image-file" accept="image/*" class="w-full border p-2 rounded-lg">
@@ -139,9 +145,10 @@
         </form>
       </div>
 
-      <!-- Current Deals Sidebar -->
+      <!-- Current Deals Sidebar (with Active Search and Filters) -->
       <div class="bg-white p-6 rounded-xl shadow-sm space-y-4">
         <h2 class="text-lg font-bold border-b pb-2">Active Promos</h2>
+        <input type="text" id="admin-search-input" class="w-full border p-2 rounded-lg text-xs" placeholder="Search cruise title or ship...">
         <div id="admin-deals-list" class="space-y-4 max-h-[500px] overflow-y-auto">
           <!-- Dynamically populated -->
         </div>

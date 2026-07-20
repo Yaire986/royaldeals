@@ -14,7 +14,6 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-// Clean HTML tags completely while preserving normal characters (apostrophes, quotes)
 function sanitizeInput(str) {
   if (typeof str !== 'string') return str;
   return str.replace(/<[^>]*>/g, "");
@@ -38,14 +37,24 @@ const configDocRef = doc(db, "settings", "discount_config");
 
 let editingDealId = null; 
 let activeDealsArray = []; 
-let cachedReservations = []; // Stores real-time reservations for instant filtering & exporting
-let currentResFilter = "all"; // Tracks selected reservation tab
+let cachedReservations = []; 
+let currentResFilter = "all"; 
 
 const cancelEditBtn = document.getElementById("cancel-edit-btn");
 const loginSection = document.getElementById("login-section");
 const dashboardSection = document.getElementById("dashboard-section");
 
-// Auth State Observer
+// Admin Search UI Parameter
+const adminSearchInput = document.getElementById("admin-search-input");
+let activeSearchQuery = "";
+
+if (adminSearchInput) {
+  adminSearchInput.addEventListener("input", (e) => {
+    activeSearchQuery = e.target.value.toLowerCase().trim();
+    renderFilteredAdminDeals();
+  });
+}
+
 onAuthStateChanged(auth, (user) => {
   if (user) {
     loginSection.classList.add("hidden");
@@ -74,7 +83,6 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
-// Admin Login Form
 const loginForm = document.getElementById("login-form");
 const loginBtn = document.getElementById("login-btn");
 
@@ -98,7 +106,6 @@ loginForm.addEventListener("submit", async (e) => {
   }
 });
 
-// Logout
 const logoutBtn = document.getElementById("logout-btn");
 if (logoutBtn) {
   logoutBtn.addEventListener("click", async () => {
@@ -110,7 +117,6 @@ if (logoutBtn) {
   });
 }
 
-// Handle Promotion Creation / Edit Form Submissions
 const form = document.getElementById("add-deal-form");
 const submitBtn = document.getElementById("submit-btn");
 
@@ -140,6 +146,34 @@ form.addEventListener("submit", async (e) => {
 
     submitBtn.innerText = "Saving to Database...";
 
+    // Dynamic Sailing Dates JSON Parsing Handler
+    let datesArray = [];
+    const datesRawValue = document.getElementById("datesJson").value.trim();
+    
+    if (datesRawValue) {
+      try {
+        const parsed = JSON.parse(datesRawValue);
+        if (Array.isArray(parsed)) {
+          datesArray = parsed.map(item => {
+            const dep = item.departure_date || item.departure || "";
+            const ret = item.return_date || item.return || "";
+            const priceVal = Number(item.starting_price_usd || item.price || 0);
+            return {
+              departure: dep,
+              return: ret,
+              price: priceVal
+            };
+          }).filter(d => d.departure && d.return && d.price);
+        } else {
+          alert("Dates parsed but were not in an array format. Using standard defaults instead.");
+        }
+      } catch (jsonErr) {
+        alert("Warning: Problem parsing Sailing Dates JSON. Check code bracket formatting.");
+        submitBtn.disabled = false;
+        return;
+      }
+    }
+
     const dealData = {
       title: sanitizeInput(document.getElementById("title").value),
       ship: sanitizeInput(document.getElementById("ship").value),
@@ -153,6 +187,7 @@ form.addEventListener("submit", async (e) => {
       outsidePrice: Number(document.getElementById("outsidePrice").value),
       balconyPrice: Number(document.getElementById("balconyPrice").value),
       suitePrice: Number(document.getElementById("suitePrice").value),
+      dates: datesArray,
       roomImages: {
         interior: "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=600&q=80",
         outside: "https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=600&q=80",
@@ -183,6 +218,7 @@ form.addEventListener("submit", async (e) => {
     }
 
     form.reset();
+    document.getElementById("datesJson").value = "";
   } catch (error) {
     console.error("Error saving promo:", error);
     alert("An error occurred while saving.");
@@ -192,8 +228,49 @@ form.addEventListener("submit", async (e) => {
   }
 });
 
-// Fetch Promotions List for Admin Dashboard (Real-time synced)
 let unsubscribeDealsListener = null;
+
+function renderFilteredAdminDeals() {
+  const listContainer = document.getElementById("admin-deals-list");
+  listContainer.innerHTML = "";
+
+  const subset = activeDealsArray.filter(deal => {
+    if (!activeSearchQuery) return true;
+    const titleMatch = (deal.title || "").toLowerCase().includes(activeSearchQuery);
+    const shipMatch = (deal.ship || "").toLowerCase().includes(activeSearchQuery);
+    return titleMatch || shipMatch;
+  });
+
+  if (subset.length === 0) {
+    listContainer.innerHTML = `<p class="text-xs text-gray-400">No matching promotions found.</p>`;
+    return;
+  }
+
+  subset.forEach((deal) => {
+    const id = deal.id;
+    const item = document.createElement("div");
+    item.className = "flex items-center justify-between p-3 bg-gray-50 rounded-lg text-sm border";
+    
+    const statusBadge = deal.status === "draft" 
+      ? `<span class="bg-yellow-100 text-yellow-800 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase font-sans">Draft</span>`
+      : `<span class="bg-green-100 text-green-800 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase font-sans">Active</span>`;
+
+    item.innerHTML = `
+      <div class="truncate mr-2 flex-grow">
+        <div class="flex items-center space-x-2">
+          <p class="font-bold truncate">${deal.title}</p>
+          ${statusBadge}
+        </div>
+        <p class="text-xs text-gray-500">$${deal.price} • ${deal.category}</p>
+      </div>
+      <div class="flex space-x-2 shrink-0">
+        <button onclick="prepareEdit('${id}')" class="text-blue-600 hover:text-blue-800 font-semibold text-xs">Edit</button>
+        <button onclick="deleteDeal('${id}')" class="text-red-500 hover:text-red-700 font-semibold text-xs">Delete</button>
+      </div>
+    `;
+    listContainer.appendChild(item);
+  });
+}
 
 function setupRealtimeAdminDeals() {
   const listContainer = document.getElementById("admin-deals-list");
@@ -202,43 +279,20 @@ function setupRealtimeAdminDeals() {
   const q = query(dealsCollection, orderBy("createdAt", "desc"));
 
   unsubscribeDealsListener = onSnapshot(q, (snapshot) => {
-    listContainer.innerHTML = "";
     activeDealsArray = []; 
 
     snapshot.forEach((docSnap) => {
       const deal = docSnap.data();
       const id = docSnap.id;
-
       activeDealsArray.push({ id, ...deal });
-
-      const item = document.createElement("div");
-      item.className = "flex items-center justify-between p-3 bg-gray-50 rounded-lg text-sm border";
-      
-      const statusBadge = deal.status === "draft" 
-        ? `<span class="bg-yellow-100 text-yellow-800 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase font-sans">Draft</span>`
-        : `<span class="bg-green-100 text-green-800 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase font-sans">Active</span>`;
-
-      item.innerHTML = `
-        <div class="truncate mr-2 flex-grow">
-          <div class="flex items-center space-x-2">
-            <p class="font-bold truncate">${deal.title}</p>
-            ${statusBadge}
-          </div>
-          <p class="text-xs text-gray-500">$${deal.price} • ${deal.category}</p>
-        </div>
-        <div class="flex space-x-2 shrink-0">
-          <button onclick="prepareEdit('${id}')" class="text-blue-600 hover:text-blue-800 font-semibold text-xs">Edit</button>
-          <button onclick="deleteDeal('${id}')" class="text-red-500 hover:text-red-700 font-semibold text-xs">Delete</button>
-        </div>
-      `;
-      listContainer.appendChild(item);
     });
+
+    renderFilteredAdminDeals();
   }, (error) => {
     console.error("Admin listener error:", error);
   });
 }
 
-// Delete Promo
 window.deleteDeal = async function(id) {
   if (confirm("Are you sure you want to delete this promotion?")) {
     try {
@@ -250,7 +304,6 @@ window.deleteDeal = async function(id) {
   }
 };
 
-// Prepare the Form for Editing
 window.prepareEdit = function(id) {
   const dealToEdit = activeDealsArray.find(deal => deal.id === id);
   if (!dealToEdit) return;
@@ -270,22 +323,34 @@ window.prepareEdit = function(id) {
   document.getElementById("balconyPrice").value = dealToEdit.balconyPrice || "";
   document.getElementById("suitePrice").value = dealToEdit.suitePrice || "";
 
+  // Prepare nested dates array mapping in textarea directly
+  if (dealToEdit.dates && Array.isArray(dealToEdit.dates)) {
+    const datesRebuilt = dealToEdit.dates.map(d => ({
+      year: d.departure ? Number(d.departure.split('-')[0]) : 2026,
+      departure_date: d.departure,
+      return_date: d.return,
+      starting_price_usd: d.price
+    }));
+    document.getElementById("datesJson").value = JSON.stringify(datesRebuilt, null, 2);
+  } else {
+    document.getElementById("datesJson").value = "";
+  }
+
   submitBtn.innerText = "Update Promotion";
   cancelEditBtn.classList.remove("hidden");
   
   form.scrollIntoView({ behavior: 'smooth' });
 };
 
-// Cancel Edit Mode
 cancelEditBtn.addEventListener("click", () => {
   editingDealId = null;
   form.reset();
   document.getElementById("status").value = "active";
+  document.getElementById("datesJson").value = "";
   submitBtn.innerText = "Publish Promotion";
   cancelEditBtn.classList.add("hidden");
 });
 
-// Bulk JSON Import Handler
 const bulkFileInput = document.getElementById("bulk-json-file");
 const bulkImportBtn = document.getElementById("bulk-import-btn");
 
@@ -328,6 +393,7 @@ bulkImportBtn.addEventListener("click", () => {
           outsidePrice: Number(cruise.outsidePrice || (cruise.price + 200)),
           balconyPrice: Number(cruise.balconyPrice || (cruise.price + 150)),
           suitePrice: Number(cruise.suitePrice || (cruise.price * 2)),
+          dates: cruise.dates || [],
           roomImages: cruise.roomImages || {
             interior: "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=600&q=80",
             outside: "https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=600&q=80",
@@ -353,7 +419,6 @@ bulkImportBtn.addEventListener("click", () => {
   reader.readAsText(file);
 });
 
-// Global Discount Config Handler
 let unsubscribeConfigListener = null;
 const discountPercentInput = document.getElementById("discount-percent");
 const discountActiveInput = document.getElementById("discount-active");
@@ -402,7 +467,6 @@ saveDiscountBtn.addEventListener("click", async () => {
   }
 });
 
-// Global Toggle for Passenger Details Accordion
 window.togglePassengerDropdown = function(id) {
   const target = document.getElementById(`companions-${id}`);
   if (target) {
@@ -410,7 +474,6 @@ window.togglePassengerDropdown = function(id) {
   }
 };
 
-// Global helper for remaining time left formatting (Active holds)
 function formatTimeLeft(expISO) {
   if (!expISO) return "N/A";
   const exp = new Date(expISO);
@@ -425,7 +488,6 @@ function formatTimeLeft(expISO) {
   return `${hours}h ${minutes}m left`;
 }
 
-// Global Export CSV Logic
 function handleCSVExport() {
   const visibleRes = getFilteredReservationsList();
   if (visibleRes.length === 0) {
@@ -476,7 +538,6 @@ function handleCSVExport() {
   document.body.removeChild(downloadLink);
 }
 
-// Client-side helper function to return a filtered subset of stored holds
 function getFilteredReservationsList() {
   const now = new Date();
   return cachedReservations.filter(res => {
@@ -492,11 +553,10 @@ function getFilteredReservationsList() {
     if (currentResFilter === "expired") {
       return res.status === "hold" && isExpired;
     }
-    return true; // "all" tab
+    return true; 
   });
 }
 
-// Master Client-side Renderer for Synchronized Reservation Holds
 function renderReservationsUI() {
   const listContainer = document.getElementById("admin-reservations-list");
   const countBadge = document.getElementById("reservation-count-badge");
@@ -522,7 +582,6 @@ function renderReservationsUI() {
     const expiration = res.holdUntil ? new Date(res.holdUntil) : null;
     const isExpired = expiration && now > expiration;
 
-    // A: Hold Status Logic & Countdown Labels
     let statusBadgeHTML = "";
     let expirationLabelHTML = "";
     let rowClasses = "hover:bg-gray-50/50 transition-colors";
@@ -534,7 +593,7 @@ function renderReservationsUI() {
       if (isExpired) {
         statusBadgeHTML = `<span class="bg-red-100 text-red-800 text-[10px] font-black px-2 py-0.5 rounded uppercase font-sans">Expired</span>`;
         expirationLabelHTML = `<span class="text-red-600 font-extrabold block text-[11px]">Expired Hold</span>`;
-        rowClasses += " opacity-60 bg-gray-50/30"; // Dimming expired holds for visual prioritization
+        rowClasses += " opacity-60 bg-gray-50/30"; 
       } else {
         const timeLeft = formatTimeLeft(res.holdUntil);
         statusBadgeHTML = `<span class="bg-yellow-100 text-yellow-800 text-[10px] font-black px-2 py-0.5 rounded uppercase font-sans">Hold</span>`;
@@ -542,7 +601,6 @@ function renderReservationsUI() {
       }
     }
 
-    // B: Lead Guest Country & Optional Loyalty membership display
     const loyaltyBadgeHTML = lead.loyaltyNumber 
       ? `<div class="mt-1.5 inline-block bg-blue-50 text-blue-800 border border-blue-200 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase font-sans tracking-wide">Crown & Anchor: #${sanitizeInput(lead.loyaltyNumber)}</div>` 
       : "";
@@ -556,7 +614,6 @@ function renderReservationsUI() {
       </div>
     `;
 
-    // C: Traveling Companions (Interactive details drawer)
     let companionsHTML = "";
     let togglerButtonHTML = "";
 
@@ -642,7 +699,6 @@ function renderReservationsUI() {
   });
 }
 
-// Fetch Reservation Holds List for Admin Dashboard (Real-time synced)
 let unsubscribeReservationsListener = null;
 
 function setupRealtimeReservations() {
@@ -665,7 +721,6 @@ function setupRealtimeReservations() {
   });
 }
 
-// Helper to switch Reservation holds tabs
 function setReservationFilter(filterVal) {
   const buttons = document.querySelectorAll(".res-filter-btn");
   buttons.forEach(btn => {
@@ -688,7 +743,6 @@ function setReservationFilter(filterVal) {
   renderReservationsUI();
 }
 
-// Global action to update reservation status
 window.updateReservationStatus = async function(id, newStatus) {
   try {
     const docRef = doc(db, "reservations", id);
@@ -699,7 +753,6 @@ window.updateReservationStatus = async function(id, newStatus) {
   }
 };
 
-// Global action to delete reservation
 window.deleteReservation = async function(id) {
   if (confirm("Are you sure you want to delete this reservation permanently? This action cannot be undone.")) {
     try {
@@ -712,7 +765,6 @@ window.deleteReservation = async function(id) {
   }
 };
 
-// Setup Interactive Action Listeners inside Admin Panels
 function setupAdminPanelListeners() {
   document.getElementById("filter-res-all").addEventListener("click", () => setReservationFilter("all"));
   document.getElementById("filter-res-active").addEventListener("click", () => setReservationFilter("active"));
@@ -721,5 +773,4 @@ function setupAdminPanelListeners() {
   document.getElementById("export-csv-btn").addEventListener("click", handleCSVExport);
 }
 
-setupInteractiveListeners();
 setupAdminPanelListeners();

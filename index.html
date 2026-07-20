@@ -32,6 +32,22 @@
     body.modal-active #jivo-iframe-container {
       display: none !important;
     }
+    
+    /* Clean horizontal scrollbar formatting for custom date selectors */
+    .scrollbar-thin::-webkit-scrollbar {
+      height: 6px;
+    }
+    .scrollbar-thin::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 10px;
+    }
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 10px;
+    }
+    .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
   </style>
 </head>
 <body class="bg-gray-50 text-gray-900 font-sans select-none relative">
@@ -54,13 +70,13 @@
         </div>
       </div>
 
-      <!-- Desktop Navigation Links (Hidden on Mobile) -->
+      <!-- Desktop Navigation Links -->
       <nav class="hidden sm:flex space-x-6 text-sm font-semibold text-gray-700">
         <a href="#quick-filter" class="hover:text-blue-900 transition-colors">Active Promos</a>
         <a href="terms.html" target="_blank" class="hover:text-blue-900 transition-colors">Terms &amp; Conditions</a>
       </nav>
 
-      <!-- Hamburger Button (Visible only on Mobile) -->
+      <!-- Hamburger Button -->
       <button id="menu-toggle-btn" class="sm:hidden text-gray-700 hover:text-blue-900 focus:outline-none p-1 shrink-0" aria-label="Toggle Menu">
         <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
@@ -68,7 +84,7 @@
       </button>
     </div>
 
-    <!-- Mobile Dropdown Menu (Hidden by default) -->
+    <!-- Mobile Dropdown Menu -->
     <div id="mobile-menu" class="hidden sm:hidden w-full bg-white border-t border-gray-100 px-4 py-3 space-y-2 shadow-inner">
       <a href="#quick-filter" class="block py-2 text-sm font-semibold text-gray-700 hover:text-blue-900 transition-colors">Active Promos</a>
       <a href="terms.html" target="_blank" class="block py-2 text-sm font-semibold text-gray-700 hover:text-blue-900 transition-colors">Terms &amp; Conditions</a>
@@ -186,7 +202,7 @@
             <p id="modal-cruise-ship" class="text-xs text-blue-200 font-medium mt-1 truncate">Icon of the Seas • Departing Jul 9, 2027</p>
           </div>
 
-          <!-- Mobile Summary Accordion Toggler (Visible only on mobile) -->
+          <!-- Mobile Summary Accordion Toggler -->
           <div class="md:hidden flex justify-between items-center p-4 border-b bg-slate-100 shrink-0">
             <div>
               <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Est. Price Total</span>
@@ -296,7 +312,15 @@
                 </select>
               </div>
 
-              <div class="space-y-2">
+              <!-- Dynamic Sailing Dates Carousel Selector (Visible only when sailing possesses multiple dates) -->
+              <div id="modal-dates-container" class="space-y-2 hidden border-t border-gray-100 pt-4">
+                <label class="block text-xs font-black uppercase text-gray-400 tracking-wider">Select Sailing Date</label>
+                <div id="modal-dates-carousel" class="flex overflow-x-auto space-x-3 pb-3 scrollbar-thin scrollbar-thumb-gray-300">
+                  <!-- Generated dynamically via JS -->
+                </div>
+              </div>
+
+              <div class="space-y-2 border-t border-gray-100 pt-4">
                 <label class="block text-xs font-black uppercase text-gray-400 tracking-wider">Select Cabin Experience</label>
                 
                 <!-- Modern Visual Grid Layout -->

@@ -1,3 +1,4 @@
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { 
   getFirestore, 
@@ -25,16 +26,26 @@ const db = getFirestore(app);
 const dealsCollection = collection(db, "promo_deals");
 const configDocRef = doc(db, "settings", "discount_config");
 
-// Memory Cache, Pagination, & Stepper parameters
 let allDeals = [];
 let filteredDeals = [];
 let displayedLimit = 15;
 let currentCategory = "all";
 let currentDealInModal = null;
-let currentStep = 1; // Tracks progress (1, 2, or 3)
+let currentStep = 1; 
 let discountConfig = { percentage: 0, isActive: false };
 
-// Fetch active deals and configurations on initialization
+// Dynamic Dates Tracker Variables
+let selectedDateObj = null;
+
+// Convert YYYY-MM-DD back into clean readable text formats (e.g., Jul 24, 2026)
+function formatDateFriendly(dateStr) {
+  if (!dateStr) return "";
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return dateStr;
+  const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+  return dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
 async function initializePromoFinder() {
   const grid = document.getElementById('deals-grid');
   grid.innerHTML = '<p class="text-center text-gray-500 col-span-3 py-12">Loading promotions...</p>';
@@ -231,7 +242,6 @@ function setupInteractiveListeners() {
   });
 }
 
-// Function to handle dynamic step view transitions inside the claim modal
 function setStep(targetStep) {
   currentStep = targetStep;
 
@@ -251,7 +261,6 @@ function setStep(targetStep) {
   const label2 = document.getElementById("step-label-2");
   const label3 = document.getElementById("step-label-3");
 
-  // Toggle Visibility of active step content blocks
   s1.classList.add("hidden");
   s2.classList.add("hidden");
   s3.classList.add("hidden");
@@ -275,23 +284,19 @@ function setStep(targetStep) {
     populateReviewDetails();
   }
 
-  // Update Progress Tracker Dots
   dot1.className = `h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${currentStep >= 1 ? 'bg-blue-900 text-white' : 'bg-gray-100 text-gray-400'}`;
   dot2.className = `h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${currentStep >= 2 ? 'bg-blue-900 text-white' : 'bg-gray-100 text-gray-400'}`;
   dot3.className = `h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${currentStep >= 3 ? 'bg-blue-900 text-white' : 'bg-gray-100 text-gray-400'}`;
 
-  // Update Progress Tracker Labels
   label1.className = `text-xs font-bold transition-all ${currentStep >= 1 ? 'text-blue-900' : 'text-gray-400'}`;
   label2.className = `text-xs font-bold transition-all ${currentStep >= 2 ? 'text-blue-900' : 'text-gray-400'}`;
   label3.className = `text-xs font-bold transition-all ${currentStep >= 3 ? 'text-blue-900' : 'text-gray-400'}`;
 
-  // Use Checkmark Indicator on Finished Steps
   dot1.innerHTML = currentStep > 1 ? "✓" : "1";
   dot2.innerHTML = currentStep > 2 ? "✓" : "2";
   dot3.innerHTML = "3";
 }
 
-// Dynamically inject companion passenger input forms based on Step 1 configuration
 function generateAdditionalGuestForms() {
   const container = document.getElementById("additional-guests-container");
   container.innerHTML = "";
@@ -325,7 +330,6 @@ function generateAdditionalGuestForms() {
   }
 }
 
-// Populate Step 3 Review Panel with active state selections
 function populateReviewDetails() {
   const reviewWrapper = document.getElementById("step-3-review-container");
   
@@ -338,7 +342,12 @@ function populateReviewDetails() {
   const leadPhone = document.getElementById("guest-phone").value.trim();
   const leadLoyalty = document.getElementById("guest-loyalty").value.trim() || "Not provided";
 
-  // Gather additional companion passenger details
+  // Displaying sailing dates
+  let sailingDatesText = currentDealInModal.departureDate || "Selected Date";
+  if (selectedDateObj) {
+    sailingDatesText = `${formatDateFriendly(selectedDateObj.departure)} - ${formatDateFriendly(selectedDateObj.return)}`;
+  }
+
   const names = document.querySelectorAll(".additional-guest-name");
   const ages = document.querySelectorAll(".additional-guest-age");
   let companionsHTML = "";
@@ -357,7 +366,7 @@ function populateReviewDetails() {
       <div>
         <p class="text-[10px] font-extrabold uppercase text-gray-400 tracking-wider">Selected Option</p>
         <p class="text-sm font-black text-blue-950">${cabinExperience} Experience</p>
-        <p class="text-xs text-gray-600">${currentDealInModal.ship} • Departing ${currentDealInModal.departureDate || 'Selected Date'}</p>
+        <p class="text-xs text-gray-600">${currentDealInModal.ship} • Departing ${sailingDatesText}</p>
       </div>
 
       <div class="border-t pt-3 space-y-1">
@@ -383,9 +392,13 @@ function openDealModal(deal) {
   const summaryBreakdown = document.getElementById("summary-breakdown-details");
   const navControls = document.getElementById("modal-nav-controls");
 
-  currentDealInModal = deal;
+  // Dynamic Dates Selector Containers
+  const datesContainer = document.getElementById("modal-dates-container");
+  const datesCarousel = document.getElementById("modal-dates-carousel");
 
-  // OPTION A: Hide JivoChat (via body class) & Hide Live Activity Feed
+  currentDealInModal = deal;
+  selectedDateObj = null;
+
   document.body.classList.add("modal-active");
   const liveActivity = document.getElementById("live-activity-container");
   if (liveActivity) {
@@ -395,26 +408,52 @@ function openDealModal(deal) {
   document.getElementById("modal-cruise-title").innerText = deal.title;
   document.getElementById("modal-cruise-ship").innerText = `${deal.ship} • Departing ${deal.departureDate || 'Selected Date'}`;
 
+  // Rendering horizontal dates scrolling selector panel [4]
+  if (deal.dates && Array.isArray(deal.dates) && deal.dates.length > 0) {
+    datesContainer.classList.remove("hidden");
+    datesCarousel.innerHTML = "";
+
+    // Set first date selected by default
+    selectedDateObj = deal.dates[0];
+
+    deal.dates.forEach((date, idx) => {
+      const depFriendly = formatDateFriendly(date.departure);
+      const retFriendly = formatDateFriendly(date.return);
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = `date-card-btn shrink-0 border-2 rounded-xl p-3 text-left w-36 transition-all focus:outline-none ${idx === 0 ? 'border-blue-900 bg-blue-50/30' : 'border-gray-200 hover:border-blue-900'}`;
+      btn.setAttribute("data-index", idx);
+      btn.innerHTML = `
+        <p class="text-[9px] uppercase font-black text-gray-400">Sailing</p>
+        <p class="text-xs font-black text-blue-950 truncate">${depFriendly}</p>
+        <p class="text-[10px] text-gray-500 font-medium truncate">to ${retFriendly}</p>
+        <p class="text-sm font-black text-blue-900 mt-1">$${date.price} <span class="text-[9px] font-normal text-gray-400">PP</span></p>
+      `;
+
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".date-card-btn").forEach(b => {
+          b.className = "date-card-btn shrink-0 border border-gray-200 hover:border-blue-900 rounded-xl p-3 text-left w-36 transition-all focus:outline-none";
+        });
+        btn.className = "date-card-btn shrink-0 border-2 border-blue-900 bg-blue-50/30 rounded-xl p-3 text-left w-36 transition-all focus:outline-none";
+        selectedDateObj = deal.dates[idx];
+        
+        // Dynamically recalculating prices when date is changed
+        recalculatePricesInModal();
+      });
+
+      datesCarousel.appendChild(btn);
+    });
+
+  } else {
+    datesContainer.classList.add("hidden");
+    datesCarousel.innerHTML = "";
+  }
+
   const isPromoActive = discountConfig && discountConfig.isActive && discountConfig.percentage > 0;
-  const stateroomOptions = [
-    { id: "modal-interior-price", price: deal.interiorPrice || 1123 },
-    { id: "modal-outside-price", price: deal.outsidePrice || 1363 },
-    { id: "modal-balcony-price", price: deal.balconyPrice || 1335 },
-    { id: "modal-suite-price", price: deal.suitePrice || 3185 }
-  ];
-
-  stateroomOptions.forEach(opt => {
-    const elem = document.getElementById(opt.id);
-    if (isPromoActive) {
-      const discountVal = Math.round(opt.price * (1 - (discountConfig.percentage / 100)));
-      elem.innerHTML = `<span class="line-through text-gray-400 font-normal mr-1">$${opt.price}</span> $${discountVal}`;
-    } else {
-      elem.innerHTML = `$${opt.price}`;
-    }
-  });
-
   const globalBadgeItem = document.getElementById("global-discount-badge-item");
   const globalBadgePercent = document.getElementById("summary-discount-percent");
+  
   if (isPromoActive) {
     globalBadgeItem.classList.remove("hidden");
     globalBadgePercent.innerText = discountConfig.percentage;
@@ -439,67 +478,112 @@ function openDealModal(deal) {
   summaryBreakdown.classList.add("hidden");
   toggleSummaryBtn.innerText = "Show Summary ▾";
 
-  // Initialize view back to Step 1
   setStep(1);
 
-  const stateroomRadios = document.querySelectorAll('input[name="stateroom"]');
-  stateroomRadios.forEach(r => {
-    const label = r.closest('label');
-    if (r.checked) {
-      label.className = "border-2 border-blue-900 rounded-xl overflow-hidden flex flex-col cursor-pointer transition-all relative bg-white pb-3 shadow-sm ring-2 ring-blue-900/10";
-    } else {
-      label.className = "border border-gray-200 rounded-xl overflow-hidden flex flex-col hover:border-blue-900 cursor-pointer transition-all relative bg-white pb-3 shadow-sm";
-    }
-  });
-
-  // Calculate Initial Pricing
-  const guestCountSelect = document.getElementById("guest-count-select");
-  const selectedRadio = document.querySelector('input[name="stateroom"]:checked');
-  if (selectedRadio) {
-    const stateroomType = selectedRadio.value;
-    const guestCount = Number(guestCountSelect.value || 2);
-
-    let baseCabinPrice = 1123;
-    if (stateroomType === "Interior") baseCabinPrice = deal.interiorPrice || 1123;
-    else if (stateroomType === "Outside View") baseCabinPrice = deal.outsidePrice || 1363;
-    else if (stateroomType === "Balcony") baseCabinPrice = deal.balconyPrice || 1335;
-    else if (stateroomType === "Suite") baseCabinPrice = deal.suitePrice || 3185;
-
-    if (isPromoActive) {
-      baseCabinPrice = Math.round(baseCabinPrice * (1 - (discountConfig.percentage / 100)));
-    }
-
-    const rawCruiseFare = baseCabinPrice * guestCount;
-
-    let promoSavings = 0;
-    if (guestCount >= 2) promoSavings += baseCabinPrice * 0.60;
-    if (guestCount > 2) promoSavings += baseCabinPrice * (guestCount - 2);
-
-    const flatFlashVoucher = 150;
-    const finalPromoSavings = promoSavings + flatFlashVoucher;
-    const taxesAndFees = guestCount * 125;
-
-    const estimatedTotal = rawCruiseFare - finalPromoSavings + taxesAndFees;
-    const formattedTotal = `$${estimatedTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-
-    document.getElementById("summary-guest-count").innerText = guestCount;
-    document.getElementById("summary-base-fare").innerText = `$${rawCruiseFare.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-    document.getElementById("summary-discounts").innerText = `-$${finalPromoSavings.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-    document.getElementById("summary-taxes").innerText = `$${taxesAndFees.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-    
-    document.getElementById("summary-estimated-total").innerText = formattedTotal;
-    document.getElementById("summary-savings-total").innerText = `$${finalPromoSavings.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-    
-    const affirmPayment = Math.ceil(estimatedTotal / 24);
-    document.getElementById("summary-affirm-est").innerText = affirmPayment;
-
-    document.getElementById("sticky-mobile-total").innerText = formattedTotal;
-    document.getElementById("accordion-total-price").innerText = formattedTotal;
-    document.getElementById("summary-success-final-price").innerText = formattedTotal;
-  }
+  // Trigger base pricing calculations on initialization
+  recalculatePricesInModal();
 
   document.body.classList.add("overflow-hidden");
   modal.classList.remove("hidden");
+}
+
+// Master Recalculator: Resolves Cabin pricing relative to currently selected date's price
+function recalculatePricesInModal() {
+  if (!currentDealInModal) return;
+
+  const guestCountSelect = document.getElementById("guest-count-select");
+  const selectedRadio = document.querySelector('input[name="stateroom"]:checked');
+  if (!selectedRadio) return;
+
+  const stateroomType = selectedRadio.value;
+  const guestCount = Number(guestCountSelect.value || 2);
+
+  // Base Interior default rate
+  let defaultInterior = currentDealInModal.interiorPrice || currentDealInModal.price || 1123;
+  let defaultOutside = currentDealInModal.outsidePrice || 1363;
+  let defaultBalcony = currentDealInModal.balconyPrice || 1335;
+  let defaultSuite = currentDealInModal.suitePrice || 3185;
+
+  // Compute database category offsets (deltas) relative to Interior base rate
+  const deltaOutside = defaultOutside - defaultInterior;
+  const deltaBalcony = defaultBalcony - defaultInterior;
+  const deltaSuite = defaultSuite - defaultInterior;
+
+  // Determine working base rates
+  let workingInterior = defaultInterior;
+  if (selectedDateObj) {
+    // Selected dates price becomes base Interior rate
+    workingInterior = selectedDateObj.price;
+  }
+
+  let workingOutside = workingInterior + deltaOutside;
+  let workingBalcony = workingInterior + deltaBalcony;
+  let workingSuite = workingInterior + deltaSuite;
+
+  const isPromoActive = discountConfig && discountConfig.isActive && discountConfig.percentage > 0;
+  
+  // Render visual rates for radio button choices inside the selector panel
+  const categories = [
+    { id: "modal-interior-price", raw: workingInterior },
+    { id: "modal-outside-price", raw: workingOutside },
+    { id: "modal-balcony-price", raw: workingBalcony },
+    { id: "modal-suite-price", raw: workingSuite }
+  ];
+
+  categories.forEach(cat => {
+    const elem = document.getElementById(cat.id);
+    if (isPromoActive) {
+      const discountVal = Math.round(cat.raw * (1 - (discountConfig.percentage / 100)));
+      elem.innerHTML = `<span class="line-through text-gray-400 font-normal mr-1">$${cat.raw}</span> $${discountVal}`;
+    } else {
+      elem.innerHTML = `$${cat.raw}`;
+    }
+  });
+
+  // Calculate pricing based on stateroom chosen
+  let baseCabinPrice = workingInterior;
+  if (stateroomType === "Interior") baseCabinPrice = workingInterior;
+  else if (stateroomType === "Outside View") baseCabinPrice = workingOutside;
+  else if (stateroomType === "Balcony") baseCabinPrice = workingBalcony;
+  else if (stateroomType === "Suite") baseCabinPrice = workingSuite;
+
+  if (isPromoActive) {
+    baseCabinPrice = Math.round(baseCabinPrice * (1 - (discountConfig.percentage / 100)));
+  }
+
+  const rawCruiseFare = baseCabinPrice * guestCount;
+
+  // Compute promo discounts
+  let promoSavings = 0;
+  if (guestCount >= 2) {
+    promoSavings += baseCabinPrice * 0.60;
+  }
+  if (guestCount > 2) {
+    promoSavings += baseCabinPrice * (guestCount - 2);
+  }
+
+  const flatFlashVoucher = 150;
+  const finalPromoSavings = promoSavings + flatFlashVoucher;
+  const taxesAndFees = guestCount * 125;
+
+  const estimatedTotal = rawCruiseFare - finalPromoSavings + taxesAndFees;
+  const formattedTotal = `$${estimatedTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+  // Update Left Side Breakdown View
+  document.getElementById("summary-guest-count").innerText = guestCount;
+  document.getElementById("summary-base-fare").innerText = `$${rawCruiseFare.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+  document.getElementById("summary-discounts").innerText = `-$${finalPromoSavings.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+  document.getElementById("summary-taxes").innerText = `$${taxesAndFees.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+  
+  document.getElementById("summary-estimated-total").innerText = formattedTotal;
+  document.getElementById("summary-savings-total").innerText = `$${finalPromoSavings.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+  
+  const affirmPayment = Math.ceil(estimatedTotal / 24);
+  document.getElementById("summary-affirm-est").innerText = affirmPayment;
+
+  document.getElementById("sticky-mobile-total").innerText = formattedTotal;
+  document.getElementById("accordion-total-price").innerText = formattedTotal;
+  document.getElementById("summary-success-final-price").innerText = formattedTotal;
 }
 
 function setupClaimListeners() {
@@ -524,59 +608,6 @@ function setupClaimListeners() {
   const toggleSummaryBtn = document.getElementById("toggle-summary-btn");
   const summaryBreakdown = document.getElementById("summary-breakdown-details");
 
-  function recalculatePrices() {
-    if (!currentDealInModal) return;
-
-    const selectedRadio = document.querySelector('input[name="stateroom"]:checked');
-    if (!selectedRadio) return;
-
-    const stateroomType = selectedRadio.value;
-    const guestCount = Number(guestCountSelect.value || 2);
-
-    let baseCabinPrice = 1123;
-    if (stateroomType === "Interior") baseCabinPrice = currentDealInModal.interiorPrice || 1123;
-    else if (stateroomType === "Outside View") baseCabinPrice = currentDealInModal.outsidePrice || 1363;
-    else if (stateroomType === "Balcony") baseCabinPrice = currentDealInModal.balconyPrice || 1335;
-    else if (stateroomType === "Suite") baseCabinPrice = currentDealInModal.suitePrice || 3185;
-
-    const isPromoActive = discountConfig && discountConfig.isActive && discountConfig.percentage > 0;
-    if (isPromoActive) {
-      baseCabinPrice = Math.round(baseCabinPrice * (1 - (discountConfig.percentage / 100)));
-    }
-
-    const rawCruiseFare = baseCabinPrice * guestCount;
-
-    let promoSavings = 0;
-    if (guestCount >= 2) {
-      promoSavings += baseCabinPrice * 0.60;
-    }
-    if (guestCount > 2) {
-      promoSavings += baseCabinPrice * (guestCount - 2);
-    }
-
-    const flatFlashVoucher = 150;
-    const finalPromoSavings = promoSavings + flatFlashVoucher;
-    const taxesAndFees = guestCount * 125;
-
-    const estimatedTotal = rawCruiseFare - finalPromoSavings + taxesAndFees;
-    const formattedTotal = `$${estimatedTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-
-    document.getElementById("summary-guest-count").innerText = guestCount;
-    document.getElementById("summary-base-fare").innerText = `$${rawCruiseFare.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-    document.getElementById("summary-discounts").innerText = `-$${finalPromoSavings.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-    document.getElementById("summary-taxes").innerText = `$${taxesAndFees.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-    
-    document.getElementById("summary-estimated-total").innerText = formattedTotal;
-    document.getElementById("summary-savings-total").innerText = `$${finalPromoSavings.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-    
-    const affirmPayment = Math.ceil(estimatedTotal / 24);
-    document.getElementById("summary-affirm-est").innerText = affirmPayment;
-
-    document.getElementById("sticky-mobile-total").innerText = formattedTotal;
-    document.getElementById("accordion-total-price").innerText = formattedTotal;
-    document.getElementById("summary-success-final-price").innerText = formattedTotal;
-  }
-
   function updateStateroomSelectionBorders() {
     stateroomRadios.forEach(r => {
       const label = r.closest('label');
@@ -588,11 +619,11 @@ function setupClaimListeners() {
     });
   }
 
-  guestCountSelect.addEventListener("change", recalculatePrices);
+  guestCountSelect.addEventListener("change", recalculatePricesInModal);
   stateroomRadios.forEach(radio => {
     radio.addEventListener("change", () => {
       updateStateroomSelectionBorders();
-      recalculatePrices();
+      recalculatePricesInModal();
     });
   });
 
@@ -616,7 +647,6 @@ function setupClaimListeners() {
     });
   });
 
-  // Client-Side Validator for Step 2 Info Block
   function validateGuestDetails() {
     const leadName = document.getElementById("guest-name").value.trim();
     const leadCountry = document.getElementById("guest-country").value.trim();
@@ -640,7 +670,6 @@ function setupClaimListeners() {
     return true;
   }
 
-  // Handle Stepper Action Logic
   function handleNextStep() {
     if (currentStep === 1) {
       setStep(2);
@@ -686,11 +715,30 @@ function setupClaimListeners() {
       const stateroomType = selectedRadio ? selectedRadio.value : "Interior";
       const guestCount = Number(guestCountSelect.value || 2);
 
-      let baseCabinPrice = 1123;
-      if (stateroomType === "Interior") baseCabinPrice = currentDealInModal.interiorPrice || 1123;
-      else if (stateroomType === "Outside View") baseCabinPrice = currentDealInModal.outsidePrice || 1363;
-      else if (stateroomType === "Balcony") baseCabinPrice = currentDealInModal.balconyPrice || 1335;
-      else if (stateroomType === "Suite") baseCabinPrice = currentDealInModal.suitePrice || 3185;
+      // Resolve cabin base rates relative to active offsets
+      let defaultInterior = currentDealInModal.interiorPrice || currentDealInModal.price || 1123;
+      let defaultOutside = currentDealInModal.outsidePrice || 1363;
+      let defaultBalcony = currentDealInModal.balconyPrice || 1335;
+      let defaultSuite = currentDealInModal.suitePrice || 3185;
+
+      const deltaOutside = defaultOutside - defaultInterior;
+      const deltaBalcony = defaultBalcony - defaultInterior;
+      const deltaSuite = defaultSuite - defaultInterior;
+
+      let workingInterior = defaultInterior;
+      if (selectedDateObj) {
+        workingInterior = selectedDateObj.price;
+      }
+
+      let workingOutside = workingInterior + deltaOutside;
+      let workingBalcony = workingInterior + deltaBalcony;
+      let workingSuite = workingInterior + deltaSuite;
+
+      let baseCabinPrice = workingInterior;
+      if (stateroomType === "Interior") baseCabinPrice = workingInterior;
+      else if (stateroomType === "Outside View") baseCabinPrice = workingOutside;
+      else if (stateroomType === "Balcony") baseCabinPrice = workingBalcony;
+      else if (stateroomType === "Suite") baseCabinPrice = workingSuite;
 
       const isPromoActive = discountConfig && discountConfig.isActive && discountConfig.percentage > 0;
       if (isPromoActive) {
@@ -715,7 +763,6 @@ function setupClaimListeners() {
       const now = new Date();
       const holdUntil = new Date(now.getTime() + 24 * 60 * 60 * 1000); 
 
-      // Build companion passenger arrays
       const companionsList = [];
       const companionNames = document.querySelectorAll(".additional-guest-name");
       const companionAges = document.querySelectorAll(".additional-guest-age");
@@ -724,6 +771,12 @@ function setupClaimListeners() {
           name: companionNames[i].value.trim(),
           age: Number(companionAges[i].value.trim())
         });
+      }
+
+      // Record selection departure rate parameters directly
+      let chosenDepartureDateString = currentDealInModal.departureDate || "Selected Date";
+      if (selectedDateObj) {
+        chosenDepartureDateString = `${formatDateFriendly(selectedDateObj.departure)} - ${formatDateFriendly(selectedDateObj.return)}`;
       }
 
       const reservationDocRef = doc(db, "reservations", reservationId);
@@ -743,7 +796,7 @@ function setupClaimListeners() {
         bookingDetails: {
           cruiseTitle: currentDealInModal.title,
           shipName: currentDealInModal.ship,
-          departureDate: currentDealInModal.departureDate || "Selected Date",
+          departureDate: chosenDepartureDateString,
           stateroomType: stateroomType,
           guestCount: guestCount
         },
@@ -781,7 +834,6 @@ function setupClaimListeners() {
     modal.classList.add("hidden");
     document.body.classList.remove("overflow-hidden");
 
-    // OPTION A: Restore JivoChat (via body class) & Restore Live Activity Feed
     document.body.classList.remove("modal-active");
     const liveActivity = document.getElementById("live-activity-container");
     if (liveActivity) {
@@ -790,6 +842,7 @@ function setupClaimListeners() {
 
     currentDealInModal = null;
     currentStep = 1;
+    selectedDateObj = null;
   }
 
   successCloseBtn.addEventListener("click", resetAndCloseModal);
