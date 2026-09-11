@@ -513,6 +513,21 @@ function populateReviewDetails() {
   `;
 }
 
+function updateModalCruiseHeader() {
+  if (!currentDealInModal) return;
+
+  let displayDate = currentDealInModal.departureDate || "Selected Date";
+
+  if (selectedDateObj && selectedDateObj.departure) {
+    displayDate = formatDateFriendly(selectedDateObj.departure);
+  }
+
+  const shipSubtitle = document.getElementById("modal-cruise-ship");
+  if (shipSubtitle) {
+    shipSubtitle.innerText = `${currentDealInModal.ship} • Departing ${displayDate}`;
+  }
+}
+
 function openDealModal(deal) {
   const modal = document.getElementById("promo-modal");
   const formContainer = document.getElementById("express-form-container");
@@ -535,13 +550,13 @@ function openDealModal(deal) {
   }
   
   document.getElementById("modal-cruise-title").innerText = deal.title;
-  document.getElementById("modal-cruise-ship").innerText = `${deal.ship} • Departing ${deal.departureDate || 'Selected Date'}`;
 
-  // Render Horizontal Dates Carousel
+  // Render Horizontal Dates Carousel or Fallback
   if (deal.dates && Array.isArray(deal.dates) && deal.dates.length > 0) {
     datesContainer.classList.remove("hidden");
     datesCarousel.innerHTML = "";
 
+    // Default to the first date card
     selectedDateObj = deal.dates[0];
 
     deal.dates.forEach((date, idx) => {
@@ -564,7 +579,11 @@ function openDealModal(deal) {
           b.className = "date-card-btn shrink-0 border border-gray-200 hover:border-blue-900 rounded-xl p-3 text-left w-36 transition-all focus:outline-none";
         });
         btn.className = "date-card-btn shrink-0 border-2 border-blue-900 bg-blue-50/30 rounded-xl p-3 text-left w-36 transition-all focus:outline-none";
+        
         selectedDateObj = deal.dates[idx];
+        
+        // Updates subtitle on click
+        updateModalCruiseHeader();
         
         recalculatePricesInModal();
       });
@@ -573,9 +592,13 @@ function openDealModal(deal) {
     });
 
   } else {
+    // Single fixed-date cruise
     datesContainer.classList.add("hidden");
     datesCarousel.innerHTML = "";
   }
+
+  // Set header on initial modal open
+  updateModalCruiseHeader();
 
   const isPromoActive = discountConfig && discountConfig.isActive && discountConfig.percentage > 0;
   const globalBadgeItem = document.getElementById("global-discount-badge-item");
