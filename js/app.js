@@ -1,4 +1,3 @@
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { 
   getFirestore, 
@@ -37,6 +36,88 @@ let discountConfig = { percentage: 0, isActive: false };
 // Dynamic Dates Tracker Variables
 let selectedDateObj = null;
 
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
+const MONTH_ABBR = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+
+// Robust hybrid parser: parses both "2026-11-20" and "Nov 15, 2026"
+function parseDateToMonthKey(dateStr) {
+  if (!dateStr || typeof dateStr !== "string") return null;
+  const trimmed = dateStr.trim();
+
+  // 1. Check ISO format (YYYY-MM-DD)
+  const isoMatch = trimmed.match(/^(\d{4})-(\d{1,2})/);
+  if (isoMatch) {
+    const y = parseInt(isoMatch[1], 10);
+    const m = parseInt(isoMatch[2], 10) - 1;
+    if (m >= 0 && m < 12) {
+      return {
+        key: `${y}-${String(m + 1).padStart(2, "0")}`,
+        label: `${MONTH_NAMES[m]} ${y}`,
+        year: y,
+        month: m,
+        sortValue: y * 100 + m
+      };
+    }
+  }
+
+  // 2. Check Text format (e.g. "Nov 15, 2026" or "November 2026")
+  const textMatch = trimmed.match(/([a-zA-Z]{3,})[^0-9]*(\d{1,2})?,?[^0-9]*(\d{4})/);
+  if (textMatch) {
+    const monthWord = textMatch[1].toLowerCase().slice(0, 3);
+    const y = parseInt(textMatch[3], 10);
+    const m = MONTH_ABBR.indexOf(monthWord);
+    if (m !== -1) {
+      return {
+        key: `${y}-${String(m + 1).padStart(2, "0")}`,
+        label: `${MONTH_NAMES[m]} ${y}`,
+        year: y,
+        month: m,
+        sortValue: y * 100 + m
+      };
+    }
+  }
+
+  // 3. Fallback to native Date parser
+  const parsed = new Date(trimmed);
+  if (!isNaN(parsed.getTime())) {
+    const y = parsed.getFullYear();
+    const m = parsed.getMonth();
+    return {
+      key: `${y}-${String(m + 1).padStart(2, "0")}`,
+      label: `${MONTH_NAMES[m]} ${y}`,
+      year: y,
+      month: m,
+      sortValue: y * 100 + m
+    };
+  }
+
+  return null;
+}
+
+// Retrieves all unique departure month keys (e.g. ["2026-11", "2026-12"]) for a deal
+function getDealDepartureMonthKeys(deal) {
+  const keys = new Set();
+
+  if (Array.isArray(deal.dates) && deal.dates.length > 0) {
+    deal.dates.forEach(d => {
+      if (d && d.departure) {
+        const mObj = parseDateToMonthKey(d.departure);
+        if (mObj) keys.add(mObj.key);
+      }
+    });
+  }
+
+  if (deal.departureDate) {
+    const mObj = parseDateToMonthKey(deal.departureDate);
+    if (mObj) keys.add(mObj.key);
+  }
+
+  return Array.from(keys);
+}
+
 // Convert YYYY-MM-DD back into clean readable text formats (e.g., Jul 24, 2026)
 function formatDateFriendly(dateStr) {
   if (!dateStr) return "";
@@ -69,6 +150,7 @@ async function initializePromoFinder() {
     });
 
     populateShipFilter();
+    populateDateFilter();
     applyInteractiveFilters();
 
     startUrgencyCountdown();
@@ -93,9 +175,49 @@ function populateShipFilter() {
   });
 }
 
+// Chronologically populate unique departure months from all active deals
+function populateDateFilter() {
+  const select = document.getElementById("date-filter");
+  if (!select) return;
+
+  select.innerHTML = '<option value="all">All Departure Dates</option>';
+
+  const monthMap = new Map();
+
+  allDeals.forEach(deal => {
+    if (Array.isArray(deal.dates)) {
+      deal.dates.forEach(d => {
+        if (d && d.departure) {
+          const mObj = parseDateToMonthKey(d.departure);
+          if (mObj && !monthMap.has(mObj.key)) {
+            monthMap.set(mObj.key, mObj);
+          }
+        }
+      });
+    }
+
+    if (deal.departureDate) {
+      const mObj = parseDateToMonthKey(deal.departureDate);
+      if (mObj && !monthMap.has(mObj.key)) {
+        monthMap.set(mObj.key, mObj);
+      }
+    }
+  });
+
+  const sortedMonths = Array.from(monthMap.values()).sort((a, b) => a.sortValue - b.sortValue);
+
+  sortedMonths.forEach(m => {
+    const opt = document.createElement("option");
+    opt.value = m.key;
+    opt.innerText = m.label;
+    select.appendChild(opt);
+  });
+}
+
 function applyInteractiveFilters() {
   const searchVal = document.getElementById("search-input").value.toLowerCase().trim();
   const shipVal = document.getElementById("ship-filter").value;
+  const dateVal = document.getElementById("date-filter") ? document.getElementById("date-filter").value : "all";
   const portVal = document.getElementById("port-filter").value.toLowerCase().trim();
   const priceMax = Number(document.getElementById("price-filter").value);
 
@@ -105,6 +227,13 @@ function applyInteractiveFilters() {
     if (shipVal !== "all" && deal.ship !== shipVal) return false;
     if (portVal && !deal.port.toLowerCase().includes(portVal)) return false;
     if (deal.price > priceMax) return false;
+
+    // Departure Date Month Filter
+    if (dateVal !== "all") {
+      const dealMonths = getDealDepartureMonthKeys(deal);
+      if (!dealMonths.includes(dateVal)) return false;
+    }
+
     return true;
   });
 
@@ -203,12 +332,14 @@ function renderCachedDeals() {
 function setupInteractiveListeners() {
   const searchInput = document.getElementById("search-input");
   const shipFilter = document.getElementById("ship-filter");
+  const dateFilter = document.getElementById("date-filter");
   const portFilter = document.getElementById("port-filter");
   const priceFilter = document.getElementById("price-filter");
   const priceDisplay = document.getElementById("price-limit-display");
 
   searchInput.addEventListener("input", applyInteractiveFilters);
   shipFilter.addEventListener("change", applyInteractiveFilters);
+  if (dateFilter) dateFilter.addEventListener("change", applyInteractiveFilters);
   portFilter.addEventListener("input", applyInteractiveFilters);
   
   priceFilter.addEventListener("input", (e) => {
@@ -342,7 +473,6 @@ function populateReviewDetails() {
   const leadPhone = document.getElementById("guest-phone").value.trim();
   const leadLoyalty = document.getElementById("guest-loyalty").value.trim() || "Not provided";
 
-  // Displaying sailing dates
   let sailingDatesText = currentDealInModal.departureDate || "Selected Date";
   if (selectedDateObj) {
     sailingDatesText = `${formatDateFriendly(selectedDateObj.departure)} - ${formatDateFriendly(selectedDateObj.return)}`;
@@ -392,7 +522,6 @@ function openDealModal(deal) {
   const summaryBreakdown = document.getElementById("summary-breakdown-details");
   const navControls = document.getElementById("modal-nav-controls");
 
-  // Dynamic Dates Selector Containers
   const datesContainer = document.getElementById("modal-dates-container");
   const datesCarousel = document.getElementById("modal-dates-carousel");
 
@@ -408,12 +537,11 @@ function openDealModal(deal) {
   document.getElementById("modal-cruise-title").innerText = deal.title;
   document.getElementById("modal-cruise-ship").innerText = `${deal.ship} • Departing ${deal.departureDate || 'Selected Date'}`;
 
-  // Rendering horizontal dates scrolling selector panel [4]
+  // Render Horizontal Dates Carousel
   if (deal.dates && Array.isArray(deal.dates) && deal.dates.length > 0) {
     datesContainer.classList.remove("hidden");
     datesCarousel.innerHTML = "";
 
-    // Set first date selected by default
     selectedDateObj = deal.dates[0];
 
     deal.dates.forEach((date, idx) => {
@@ -438,7 +566,6 @@ function openDealModal(deal) {
         btn.className = "date-card-btn shrink-0 border-2 border-blue-900 bg-blue-50/30 rounded-xl p-3 text-left w-36 transition-all focus:outline-none";
         selectedDateObj = deal.dates[idx];
         
-        // Dynamically recalculating prices when date is changed
         recalculatePricesInModal();
       });
 
@@ -455,10 +582,10 @@ function openDealModal(deal) {
   const globalBadgePercent = document.getElementById("summary-discount-percent");
   
   if (isPromoActive) {
-    globalBadgeItem.classList.remove("hidden");
-    globalBadgePercent.innerText = discountConfig.percentage;
+    if (globalBadgeItem) globalBadgeItem.classList.remove("hidden");
+    if (globalBadgePercent) globalBadgePercent.innerText = discountConfig.percentage;
   } else {
-    globalBadgeItem.classList.add("hidden");
+    if (globalBadgeItem) globalBadgeItem.classList.add("hidden");
   }
 
   // Clear Form Values
@@ -480,14 +607,13 @@ function openDealModal(deal) {
 
   setStep(1);
 
-  // Trigger base pricing calculations on initialization
   recalculatePricesInModal();
 
   document.body.classList.add("overflow-hidden");
   modal.classList.remove("hidden");
 }
 
-// Master Recalculator: Resolves Cabin pricing relative to currently selected date's price
+// Master Recalculator
 function recalculatePricesInModal() {
   if (!currentDealInModal) return;
 
@@ -498,21 +624,17 @@ function recalculatePricesInModal() {
   const stateroomType = selectedRadio.value;
   const guestCount = Number(guestCountSelect.value || 2);
 
-  // Base Interior default rate
   let defaultInterior = currentDealInModal.interiorPrice || currentDealInModal.price || 1123;
   let defaultOutside = currentDealInModal.outsidePrice || 1363;
   let defaultBalcony = currentDealInModal.balconyPrice || 1335;
   let defaultSuite = currentDealInModal.suitePrice || 3185;
 
-  // Compute database category offsets (deltas) relative to Interior base rate
   const deltaOutside = defaultOutside - defaultInterior;
   const deltaBalcony = defaultBalcony - defaultInterior;
   const deltaSuite = defaultSuite - defaultInterior;
 
-  // Determine working base rates
   let workingInterior = defaultInterior;
   if (selectedDateObj) {
-    // Selected dates price becomes base Interior rate
     workingInterior = selectedDateObj.price;
   }
 
@@ -521,8 +643,8 @@ function recalculatePricesInModal() {
   let workingSuite = workingInterior + deltaSuite;
 
   const isPromoActive = discountConfig && discountConfig.isActive && discountConfig.percentage > 0;
+  const discountRate = isPromoActive ? (discountConfig.percentage / 100) : 0;
   
-  // Render visual rates for radio button choices inside the selector panel
   const categories = [
     { id: "modal-interior-price", raw: workingInterior },
     { id: "modal-outside-price", raw: workingOutside },
@@ -532,44 +654,55 @@ function recalculatePricesInModal() {
 
   categories.forEach(cat => {
     const elem = document.getElementById(cat.id);
-    if (isPromoActive) {
-      const discountVal = Math.round(cat.raw * (1 - (discountConfig.percentage / 100)));
-      elem.innerHTML = `<span class="line-through text-gray-400 font-normal mr-1">$${cat.raw}</span> $${discountVal}`;
-    } else {
-      elem.innerHTML = `$${cat.raw}`;
+    if (elem) {
+      if (isPromoActive) {
+        const discountVal = Math.round(cat.raw * (1 - discountRate));
+        elem.innerHTML = `<span class="line-through text-gray-400 font-normal mr-1">$${cat.raw}</span> $${discountVal}`;
+      } else {
+        elem.innerHTML = `$${cat.raw}`;
+      }
     }
   });
 
-  // Calculate pricing based on stateroom chosen
-  let baseCabinPrice = workingInterior;
-  if (stateroomType === "Interior") baseCabinPrice = workingInterior;
-  else if (stateroomType === "Outside View") baseCabinPrice = workingOutside;
-  else if (stateroomType === "Balcony") baseCabinPrice = workingBalcony;
-  else if (stateroomType === "Suite") baseCabinPrice = workingSuite;
+  let undiscountedBasePrice = workingInterior;
+  if (stateroomType === "Interior") undiscountedBasePrice = workingInterior;
+  else if (stateroomType === "Outside View") undiscountedBasePrice = workingOutside;
+  else if (stateroomType === "Balcony") undiscountedBasePrice = workingBalcony;
+  else if (stateroomType === "Suite") undiscountedBasePrice = workingSuite;
 
+  // 1. Undiscounted Base Fare
+  const rawCruiseFare = undiscountedBasePrice * guestCount;
+
+  // 2. Promo discounts applied for 1st and 2nd guests
+  let guestDiscounts = 0;
   if (isPromoActive) {
-    baseCabinPrice = Math.round(baseCabinPrice * (1 - (discountConfig.percentage / 100)));
+    guestDiscounts += undiscountedBasePrice * discountRate;
+  }
+  if (guestCount >= 2 && isPromoActive) {
+    guestDiscounts += undiscountedBasePrice * discountRate;
   }
 
-  const rawCruiseFare = baseCabinPrice * guestCount;
-
-  // Compute promo discounts
-  let promoSavings = 0;
-  if (guestCount >= 2) {
-    promoSavings += baseCabinPrice * 0.60;
-  }
+  // 3rd & 4th Guests sail free
+  let freeGuestsDiscount = 0;
   if (guestCount > 2) {
-    promoSavings += baseCabinPrice * (guestCount - 2);
+    freeGuestsDiscount += undiscountedBasePrice * (guestCount - 2);
   }
 
-  const flatFlashVoucher = 150;
-  const finalPromoSavings = promoSavings + flatFlashVoucher;
-  const taxesAndFees = guestCount * 125;
+  const totalDiscounts = guestDiscounts + freeGuestsDiscount;
+  const fareAfterGuestDiscount = Math.max(0, rawCruiseFare - totalDiscounts);
 
-  const estimatedTotal = rawCruiseFare - finalPromoSavings + taxesAndFees;
+  // 3. 15% Taxes and fees after discount has been applied
+  const taxesAndFees = fareAfterGuestDiscount * 0.15;
+
+  // 4. Flat flash savings voucher
+  const flatFlashVoucher = 150;
+  const finalPromoSavings = totalDiscounts + flatFlashVoucher;
+
+  // 5. Estimated Total
+  const estimatedTotal = Math.max(0, (fareAfterGuestDiscount + taxesAndFees) - flatFlashVoucher);
   const formattedTotal = `$${estimatedTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
-  // Update Left Side Breakdown View
+  // Update Left Breakdown View
   document.getElementById("summary-guest-count").innerText = guestCount;
   document.getElementById("summary-base-fare").innerText = `$${rawCruiseFare.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
   document.getElementById("summary-discounts").innerText = `-$${finalPromoSavings.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
@@ -583,7 +716,8 @@ function recalculatePricesInModal() {
 
   document.getElementById("sticky-mobile-total").innerText = formattedTotal;
   document.getElementById("accordion-total-price").innerText = formattedTotal;
-  document.getElementById("summary-success-final-price").innerText = formattedTotal;
+  const successFinalPrice = document.getElementById("summary-success-final-price");
+  if (successFinalPrice) successFinalPrice.innerText = formattedTotal;
 }
 
 function setupClaimListeners() {
@@ -715,7 +849,6 @@ function setupClaimListeners() {
       const stateroomType = selectedRadio ? selectedRadio.value : "Interior";
       const guestCount = Number(guestCountSelect.value || 2);
 
-      // Resolve cabin base rates relative to active offsets
       let defaultInterior = currentDealInModal.interiorPrice || currentDealInModal.price || 1123;
       let defaultOutside = currentDealInModal.outsidePrice || 1363;
       let defaultBalcony = currentDealInModal.balconyPrice || 1335;
@@ -734,31 +867,36 @@ function setupClaimListeners() {
       let workingBalcony = workingInterior + deltaBalcony;
       let workingSuite = workingInterior + deltaSuite;
 
-      let baseCabinPrice = workingInterior;
-      if (stateroomType === "Interior") baseCabinPrice = workingInterior;
-      else if (stateroomType === "Outside View") baseCabinPrice = workingOutside;
-      else if (stateroomType === "Balcony") baseCabinPrice = workingBalcony;
-      else if (stateroomType === "Suite") baseCabinPrice = workingSuite;
+      let undiscountedBasePrice = workingInterior;
+      if (stateroomType === "Interior") undiscountedBasePrice = workingInterior;
+      else if (stateroomType === "Outside View") undiscountedBasePrice = workingOutside;
+      else if (stateroomType === "Balcony") undiscountedBasePrice = workingBalcony;
+      else if (stateroomType === "Suite") undiscountedBasePrice = workingSuite;
 
       const isPromoActive = discountConfig && discountConfig.isActive && discountConfig.percentage > 0;
+      const discountRate = isPromoActive ? (discountConfig.percentage / 100) : 0;
+
+      const rawCruiseFare = undiscountedBasePrice * guestCount;
+
+      let guestDiscounts = 0;
       if (isPromoActive) {
-        baseCabinPrice = Math.round(baseCabinPrice * (1 - (discountConfig.percentage / 100)));
+        guestDiscounts += undiscountedBasePrice * discountRate;
+      }
+      if (guestCount >= 2 && isPromoActive) {
+        guestDiscounts += undiscountedBasePrice * discountRate;
       }
 
-      const rawCruiseFare = baseCabinPrice * guestCount;
-
-      let promoSavings = 0;
-      if (guestCount >= 2) {
-        promoSavings += baseCabinPrice * 0.60;
-      }
+      let freeGuestsDiscount = 0;
       if (guestCount > 2) {
-        promoSavings += baseCabinPrice * (guestCount - 2);
+        freeGuestsDiscount += undiscountedBasePrice * (guestCount - 2);
       }
 
+      const totalDiscounts = guestDiscounts + freeGuestsDiscount;
+      const fareAfterGuestDiscount = Math.max(0, rawCruiseFare - totalDiscounts);
+      const taxesAndFees = fareAfterGuestDiscount * 0.15;
       const flatFlashVoucher = 150;
-      const finalPromoSavings = promoSavings + flatFlashVoucher;
-      const taxesAndFees = guestCount * 125;
-      const estimatedTotal = rawCruiseFare - finalPromoSavings + taxesAndFees;
+      const finalPromoSavings = totalDiscounts + flatFlashVoucher;
+      const estimatedTotal = Math.max(0, (fareAfterGuestDiscount + taxesAndFees) - flatFlashVoucher);
 
       const now = new Date();
       const holdUntil = new Date(now.getTime() + 24 * 60 * 60 * 1000); 
@@ -773,7 +911,6 @@ function setupClaimListeners() {
         });
       }
 
-      // Record selection departure rate parameters directly
       let chosenDepartureDateString = currentDealInModal.departureDate || "Selected Date";
       if (selectedDateObj) {
         chosenDepartureDateString = `${formatDateFriendly(selectedDateObj.departure)} - ${formatDateFriendly(selectedDateObj.return)}`;

@@ -33,7 +33,6 @@
       display: none !important;
     }
     
-    /* Clean horizontal scrollbar formatting for custom date selectors */
     .scrollbar-thin::-webkit-scrollbar {
       height: 6px;
     }
@@ -61,7 +60,6 @@
   <!-- Main Navigation -->
   <header class="bg-white border-b sticky top-0 z-40 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-      <!-- Crown SVG Logo and Title -->
       <div class="flex items-center space-x-2 sm:space-x-3 shrink-0">
         <img src="logo2.svg" alt="Royal Caribbean Cruise Logo" class="h-8 w-8 shrink-0">
         <div class="flex flex-col">
@@ -131,15 +129,15 @@
       <button data-category="australia" class="filter-btn px-5 py-2.5 font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition-all text-sm">Australia & New Zealand</button>
     </div>
 
-    <!-- Advanced Interactive Filter Tool Belt -->
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
-      <!-- Search Input -->
+    <!-- Advanced Interactive Filter Tool Belt (Fluid 5-Column Grid) -->
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+      <!-- 1. Search Cruise Title -->
       <div>
         <label class="block text-xs font-bold uppercase text-gray-400 mb-2">Search Cruise Title</label>
         <input type="text" id="search-input" class="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900" placeholder="e.g. Western Caribbean">
       </div>
 
-      <!-- Ship Filter -->
+      <!-- 2. Select Ship -->
       <div>
         <label class="block text-xs font-bold uppercase text-gray-400 mb-2">Select Ship</label>
         <select id="ship-filter" class="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900 bg-white">
@@ -147,13 +145,21 @@
         </select>
       </div>
 
-      <!-- Port Search Input -->
+      <!-- 3. Departure Month -->
+      <div>
+        <label class="block text-xs font-bold uppercase text-gray-400 mb-2">Departure Month</label>
+        <select id="date-filter" class="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900 bg-white">
+          <option value="all">All Departure Dates</option>
+        </select>
+      </div>
+
+      <!-- 4. Filter By Port / Stop -->
       <div>
         <label class="block text-xs font-bold uppercase text-gray-400 mb-2">Filter By Port / Stop</label>
         <input type="text" id="port-filter" class="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900" placeholder="e.g. St. John, Juneau">
       </div>
 
-      <!-- Price Range Slider -->
+      <!-- 5. Max Price Slider -->
       <div class="space-y-2">
         <div class="flex justify-between text-xs font-bold uppercase text-gray-400">
           <span>Max Price (USD)</span>
@@ -169,9 +175,7 @@
     </div>
 
     <!-- Deals Grid -->
-    <div id="deals-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      <!-- Populated dynamically via JS -->
-    </div>
+    <div id="deals-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
 
     <!-- Load More Button -->
     <div id="load-more-container" class="text-center pt-10 hidden">
@@ -183,7 +187,6 @@
 
   <!-- Dynamic Purchase/Booking Modal -->
   <div id="promo-modal" class="fixed inset-0 bg-black/60 flex items-center justify-center p-2 sm:p-4 z-50 hidden">
-    <!-- Static Outer Wrapper (flex-col, overflow-hidden) -->
     <div id="modal-viewport-wrapper" class="bg-white max-w-5xl w-full rounded-2xl shadow-2xl relative flex flex-col max-h-[92vh] overflow-hidden">
       
       <!-- Close Button -->
@@ -192,10 +195,9 @@
       <!-- Main Columns Scroll Area -->
       <div id="modal-scroll-container" class="overflow-y-auto md:overflow-hidden flex flex-col md:flex-row flex-grow pb-24 md:pb-0 h-full">
 
-        <!-- LEFT COLUMN: Live Breakdown Summary Panel (Permanent Desktop Sidebar) -->
+        <!-- LEFT COLUMN: Live Breakdown Summary Panel -->
         <div class="w-full md:w-2/5 bg-slate-50 border-r border-gray-100 flex flex-col shrink-0 md:overflow-y-auto md:max-h-[92vh]">
           
-          <!-- Header Banner Block -->
           <div class="bg-blue-950 text-white p-5 pr-14 shrink-0 relative">
             <span class="bg-yellow-400 text-blue-950 text-[9px] font-black uppercase px-2 py-0.5 rounded tracking-wider">Lock Promo Price</span>
             <h3 id="modal-cruise-title" class="text-base font-black uppercase tracking-tight mt-2 truncate">Configure Your Cruise</h3>
@@ -206,7 +208,7 @@
           <div class="md:hidden flex justify-between items-center p-4 border-b bg-slate-100 shrink-0">
             <div>
               <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Est. Price Total</span>
-              <p id="accordion-total-price" class="text-base font-black text-blue-950">$1,646.00</p>
+              <p id="accordion-total-price" class="text-base font-black text-blue-950">$0.00</p>
             </div>
             <button id="toggle-summary-btn" class="bg-blue-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors">
               Show Summary ▾
@@ -220,21 +222,21 @@
             <div class="space-y-2 text-xs font-medium text-gray-600">
               <div class="flex justify-between">
                 <span>Base Fare (<span id="summary-guest-count">2</span> Guests)</span>
-                <span id="summary-base-fare" class="font-bold text-gray-800">$2,246.00</span>
+                <span id="summary-base-fare" class="font-bold text-gray-800">$0.00</span>
               </div>
               <div class="flex justify-between text-emerald-600 font-bold">
                 <span>Automatic Promos Locked</span>
-                <span id="summary-discounts">-$850.00</span>
+                <span id="summary-discounts">-$0.00</span>
               </div>
               <div class="flex justify-between">
                 <span>Taxes & Fees</span>
-                <span id="summary-taxes" class="font-bold text-gray-800">$250.00</span>
+                <span id="summary-taxes" class="font-bold text-gray-800">$0.00</span>
               </div>
               
               <div class="border-t pt-3 flex justify-between items-baseline">
                 <span class="text-sm font-black text-gray-800">Estimated Total</span>
                 <div class="text-right">
-                  <span id="summary-estimated-total" class="text-xl font-black text-blue-900">$1,646.00</span>
+                  <span id="summary-estimated-total" class="text-xl font-black text-blue-900">$0.00</span>
                   <span class="block text-[9px] text-gray-400 font-normal">USD Total / Includes Taxes</span>
                 </div>
               </div>
@@ -242,13 +244,13 @@
 
             <!-- Affirm Estimate Element -->
             <div class="text-[11px] text-gray-500 bg-gray-100 p-3 rounded-lg border border-gray-200/50">
-              Or as low as <strong class="text-gray-800">$<span id="summary-affirm-est">55</span>/mo</strong> with 0% interest APR. 
+              Or as low as <strong class="text-gray-800">$<span id="summary-affirm-est">0</span>/mo</strong> with 0% interest APR. 
               <a href="#" class="text-blue-800 underline font-semibold ml-1">Learn More</a>
             </div>
 
             <!-- Visual Savings Badge -->
             <div class="bg-emerald-50 border border-emerald-200 p-3 rounded-lg text-emerald-800 text-xs text-center font-bold">
-              🎉 You saved <span id="summary-savings-total">$850.00</span> on this reservation!
+              🎉 You saved <span id="summary-savings-total">$0.00</span> on this reservation!
             </div>
 
             <!-- Promos Checklist -->
@@ -256,15 +258,11 @@
               <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Promos Snagged</p>
               <div id="global-discount-badge-item" class="flex items-center text-[11px] text-gray-600 space-x-1.5 hidden">
                 <span class="text-emerald-500 font-bold">✓</span>
-                <span>Global <span id="summary-discount-percent">0</span>% Promo Applied</span>
+                <span><span id="summary-discount-percent">0</span>% Off Guests 1 &amp; 2 Applied</span>
               </div>
               <div class="flex items-center text-[11px] text-gray-600 space-x-1.5">
                 <span class="text-emerald-500 font-bold">✓</span>
-                <span>60% Off Second Guest</span>
-              </div>
-              <div class="flex items-center text-[11px] text-gray-600 space-x-1.5">
-                <span class="text-emerald-500 font-bold">✓</span>
-                <span>3rd & 4th Guests Sail Free</span>
+                <span>3rd &amp; 4th Guests Sail Free</span>
               </div>
               <div class="flex items-center text-[11px] text-gray-600 space-x-1.5">
                 <span class="text-emerald-500 font-bold">✓</span>
@@ -301,7 +299,6 @@
             
             <!-- STEP 1: CABIN EXPERIENCE SELECTION -->
             <div id="step-1-view" class="space-y-6">
-              <!-- Party Configuration Input -->
               <div>
                 <label class="block text-xs font-black uppercase text-gray-400 mb-2 tracking-wider">Number of Guests</label>
                 <select id="guest-count-select" class="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900 bg-white">
@@ -312,18 +309,15 @@
                 </select>
               </div>
 
-              <!-- Dynamic Sailing Dates Carousel Selector (Visible only when sailing possesses multiple dates) -->
+              <!-- Sailing Dates Carousel -->
               <div id="modal-dates-container" class="space-y-2 hidden border-t border-gray-100 pt-4">
                 <label class="block text-xs font-black uppercase text-gray-400 tracking-wider">Select Sailing Date</label>
-                <div id="modal-dates-carousel" class="flex overflow-x-auto space-x-3 pb-3 scrollbar-thin scrollbar-thumb-gray-300">
-                  <!-- Generated dynamically via JS -->
-                </div>
+                <div id="modal-dates-carousel" class="flex overflow-x-auto space-x-3 pb-3 scrollbar-thin scrollbar-thumb-gray-300"></div>
               </div>
 
               <div class="space-y-2 border-t border-gray-100 pt-4">
                 <label class="block text-xs font-black uppercase text-gray-400 tracking-wider">Select Cabin Experience</label>
                 
-                <!-- Modern Visual Grid Layout -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   
                   <!-- Interior -->
@@ -464,13 +458,11 @@
                 </div>
               </div>
 
-              <!-- Loyalty Optional Field -->
               <div>
                 <label class="block text-xs font-black uppercase text-gray-400 mb-2 tracking-wider">Crown &amp; Anchor Loyalty # <span class="text-[10px] font-normal lowercase text-gray-400 italic">(optional)</span></label>
                 <input type="text" id="guest-loyalty" class="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900 bg-white" placeholder="Enter Loyalty Membership Number">
               </div>
 
-              <!-- Dynamic Additional Passenger Forms -->
               <div id="additional-guests-container" class="space-y-4 border-t border-gray-100 pt-4 hidden"></div>
             </div>
 
@@ -478,10 +470,8 @@
             <div id="step-3-view" class="space-y-6 hidden">
               <p class="text-xs font-black uppercase text-blue-900 tracking-wider">Review Your Booking Hold</p>
               
-              <!-- Review Cards Wrapper -->
               <div id="step-3-review-container"></div>
 
-              <!-- Disclaimer Details -->
               <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl text-blue-950 text-xs leading-relaxed space-y-1">
                 <p class="font-bold">🔒 No Immediate Payment Necessary</p>
                 <p>Our dynamic portal lets you hold and guarantee promotional prices for 24 hours without submitting immediate payment. You will receive an invoice directly via email with confirmation documentation.</p>
@@ -496,19 +486,19 @@
             <button id="next-step-btn" class="hidden md:inline-block ml-auto bg-blue-900 hover:bg-blue-800 text-white font-black px-6 py-3.5 rounded-xl text-xs uppercase tracking-wider transition-colors">Continue to Guests ➔</button>
           </div>
 
-          <!-- Submission Loading Viewport State -->
+          <!-- Loading State -->
           <div id="booking-loading" class="hidden flex-grow flex flex-col justify-center items-center py-12 space-y-4">
             <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900"></div>
             <p class="text-sm font-bold text-gray-500">Securing dynamic cabin holdings with carrier...</p>
           </div>
 
-          <!-- Submission Success Viewport State -->
+          <!-- Success State -->
           <div id="booking-success" class="hidden flex-grow flex flex-col justify-center items-center py-8 space-y-6 text-center">
             <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 text-3xl font-bold shadow-sm">✓</div>
             <div class="space-y-1">
               <h4 class="text-2xl font-black text-blue-950 uppercase">Reservation Hold Locked!</h4>
               <p class="text-sm text-gray-500 max-w-sm mx-auto">
-                Your promotional rate of <strong id="summary-success-final-price" class="text-blue-900">$1,646.00</strong> has been successfully held.
+                Your promotional rate of <strong id="summary-success-final-price" class="text-blue-900">$0.00</strong> has been successfully held.
               </p>
             </div>
             
@@ -529,11 +519,11 @@
 
       </div>
 
-      <!-- MOBILE ONLY: DYNAMIC STICKY FOOTER BAR -->
+      <!-- MOBILE ONLY: Dynamic Sticky Footer -->
       <div id="mobile-sticky-footer" class="md:hidden absolute bottom-0 left-0 right-0 bg-white border-t p-4 flex justify-between items-center z-50 shadow-lg">
         <div>
           <span class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Estimated Total</span>
-          <p id="sticky-mobile-total" class="text-lg font-black text-blue-900">$1,646.00</p>
+          <p id="sticky-mobile-total" class="text-lg font-black text-blue-900">$0.00</p>
         </div>
         <button id="mobile-next-step-btn" class="bg-blue-900 hover:bg-blue-800 text-white text-xs font-black px-5 py-3 rounded-xl uppercase tracking-wider">
           Continue to Guests
@@ -546,7 +536,7 @@
   <!-- Dynamic Live Notification Feed -->
   <div id="live-activity-container" class="fixed top-20 left-4 right-4 sm:top-auto sm:bottom-6 sm:left-6 sm:right-auto z-50 pointer-events-none max-w-sm w-auto sm:w-full space-y-3"></div>
 
-  <!-- Simplified Footer -->
+  <!-- Footer -->
   <footer class="bg-gray-100 border-t py-8 text-center text-xs text-gray-400">
     <p>© 2026 Royal Caribbean Cruise Finder. All rights reserved.</p>
   </footer>
