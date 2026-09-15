@@ -31,7 +31,7 @@ let displayedLimit = 15;
 let currentCategory = "all";
 let currentDealInModal = null;
 let currentStep = 1; 
-let discountConfig = { percentage: 0, isActive: false };
+let discountConfig = { percentage: 0, secondGuestPercentage: 0, isActive: false };
 
 // Dynamic Dates Tracker Variables
 let selectedDateObj = null;
@@ -600,17 +600,6 @@ function openDealModal(deal) {
   // Set header on initial modal open
   updateModalCruiseHeader();
 
-  const isPromoActive = discountConfig && discountConfig.isActive && discountConfig.percentage > 0;
-  const globalBadgeItem = document.getElementById("global-discount-badge-item");
-  const globalBadgePercent = document.getElementById("summary-discount-percent");
-  
-  if (isPromoActive) {
-    if (globalBadgeItem) globalBadgeItem.classList.remove("hidden");
-    if (globalBadgePercent) globalBadgePercent.innerText = discountConfig.percentage;
-  } else {
-    if (globalBadgeItem) globalBadgeItem.classList.add("hidden");
-  }
-
   // Clear Form Values
   document.getElementById("guest-name").value = "";
   document.getElementById("guest-country").value = "";
@@ -665,9 +654,11 @@ function recalculatePricesInModal() {
   let workingBalcony = workingInterior + deltaBalcony;
   let workingSuite = workingInterior + deltaSuite;
 
-  const isPromoActive = discountConfig && discountConfig.isActive && discountConfig.percentage > 0;
-  const discountRate = isPromoActive ? (discountConfig.percentage / 100) : 0;
+  const isPromoActive = discountConfig && discountConfig.isActive;
+  const firstGuestRate = (isPromoActive && discountConfig.percentage > 0) ? (discountConfig.percentage / 100) : 0;
+  const secondGuestRate = (isPromoActive && discountConfig.secondGuestPercentage > 0) ? (discountConfig.secondGuestPercentage / 100) : 0;
   
+  // Stateroom card price tags reflect the 1st guest per-person starting rate
   const categories = [
     { id: "modal-interior-price", raw: workingInterior },
     { id: "modal-outside-price", raw: workingOutside },
@@ -678,8 +669,8 @@ function recalculatePricesInModal() {
   categories.forEach(cat => {
     const elem = document.getElementById(cat.id);
     if (elem) {
-      if (isPromoActive) {
-        const discountVal = Math.round(cat.raw * (1 - discountRate));
+      if (firstGuestRate > 0) {
+        const discountVal = Math.round(cat.raw * (1 - firstGuestRate));
         elem.innerHTML = `<span class="line-through text-gray-400 font-normal mr-1">$${cat.raw}</span> $${discountVal}`;
       } else {
         elem.innerHTML = `$${cat.raw}`;
@@ -696,16 +687,16 @@ function recalculatePricesInModal() {
   // 1. Undiscounted Base Fare
   const rawCruiseFare = undiscountedBasePrice * guestCount;
 
-  // 2. Promo discounts applied for 1st and 2nd guests
+  // 2. Individual guest promo discounts
   let guestDiscounts = 0;
-  if (isPromoActive) {
-    guestDiscounts += undiscountedBasePrice * discountRate;
+  if (firstGuestRate > 0) {
+    guestDiscounts += undiscountedBasePrice * firstGuestRate;
   }
-  if (guestCount >= 2 && isPromoActive) {
-    guestDiscounts += undiscountedBasePrice * discountRate;
+  if (guestCount >= 2 && secondGuestRate > 0) {
+    guestDiscounts += undiscountedBasePrice * secondGuestRate;
   }
 
-  // 3rd & 4th Guests sail free
+  // 3. 3rd & 4th Guests sail free
   let freeGuestsDiscount = 0;
   if (guestCount > 2) {
     freeGuestsDiscount += undiscountedBasePrice * (guestCount - 2);
@@ -714,14 +705,14 @@ function recalculatePricesInModal() {
   const totalDiscounts = guestDiscounts + freeGuestsDiscount;
   const fareAfterGuestDiscount = Math.max(0, rawCruiseFare - totalDiscounts);
 
-  // 3. 15% Taxes and fees after discount has been applied
+  // 4. 15% Taxes and fees after discount has been applied
   const taxesAndFees = fareAfterGuestDiscount * 0.15;
 
-  // 4. Flat flash savings voucher
+  // 5. Flat flash savings voucher
   const flatFlashVoucher = 150;
   const finalPromoSavings = totalDiscounts + flatFlashVoucher;
 
-  // 5. Estimated Total
+  // 6. Estimated Total
   const estimatedTotal = Math.max(0, (fareAfterGuestDiscount + taxesAndFees) - flatFlashVoucher);
   const formattedTotal = `$${estimatedTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
@@ -741,6 +732,30 @@ function recalculatePricesInModal() {
   document.getElementById("accordion-total-price").innerText = formattedTotal;
   const successFinalPrice = document.getElementById("summary-success-final-price");
   if (successFinalPrice) successFinalPrice.innerText = formattedTotal;
+
+  // Update "Promos Snagged" Checklist Lines
+  const firstBadgeItem = document.getElementById("first-guest-discount-item");
+  const firstBadgePercent = document.getElementById("summary-discount-percent");
+  const secondBadgeItem = document.getElementById("second-guest-discount-item");
+  const secondBadgePercent = document.getElementById("summary-second-guest-percent");
+
+  if (firstBadgeItem && firstBadgePercent) {
+    if (firstGuestRate > 0) {
+      firstBadgeItem.classList.remove("hidden");
+      firstBadgePercent.innerText = discountConfig.percentage;
+    } else {
+      firstBadgeItem.classList.add("hidden");
+    }
+  }
+
+  if (secondBadgeItem && secondBadgePercent) {
+    if (guestCount >= 2 && secondGuestRate > 0) {
+      secondBadgeItem.classList.remove("hidden");
+      secondBadgePercent.innerText = discountConfig.secondGuestPercentage;
+    } else {
+      secondBadgeItem.classList.add("hidden");
+    }
+  }
 }
 
 function setupClaimListeners() {
@@ -896,17 +911,18 @@ function setupClaimListeners() {
       else if (stateroomType === "Balcony") undiscountedBasePrice = workingBalcony;
       else if (stateroomType === "Suite") undiscountedBasePrice = workingSuite;
 
-      const isPromoActive = discountConfig && discountConfig.isActive && discountConfig.percentage > 0;
-      const discountRate = isPromoActive ? (discountConfig.percentage / 100) : 0;
+      const isPromoActive = discountConfig && discountConfig.isActive;
+      const firstGuestRate = (isPromoActive && discountConfig.percentage > 0) ? (discountConfig.percentage / 100) : 0;
+      const secondGuestRate = (isPromoActive && discountConfig.secondGuestPercentage > 0) ? (discountConfig.secondGuestPercentage / 100) : 0;
 
       const rawCruiseFare = undiscountedBasePrice * guestCount;
 
       let guestDiscounts = 0;
-      if (isPromoActive) {
-        guestDiscounts += undiscountedBasePrice * discountRate;
+      if (firstGuestRate > 0) {
+        guestDiscounts += undiscountedBasePrice * firstGuestRate;
       }
-      if (guestCount >= 2 && isPromoActive) {
-        guestDiscounts += undiscountedBasePrice * discountRate;
+      if (guestCount >= 2 && secondGuestRate > 0) {
+        guestDiscounts += undiscountedBasePrice * secondGuestRate;
       }
 
       let freeGuestsDiscount = 0;

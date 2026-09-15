@@ -421,6 +421,7 @@ bulkImportBtn.addEventListener("click", () => {
 
 let unsubscribeConfigListener = null;
 const discountPercentInput = document.getElementById("discount-percent");
+const secondDiscountPercentInput = document.getElementById("second-discount-percent");
 const discountActiveInput = document.getElementById("discount-active");
 const saveDiscountBtn = document.getElementById("save-discount-btn");
 
@@ -429,9 +430,15 @@ function setupRealtimeConfig() {
     if (docSnap.exists()) {
       const data = docSnap.data();
       discountPercentInput.value = data.percentage !== undefined ? data.percentage : "";
+      if (secondDiscountPercentInput) {
+        secondDiscountPercentInput.value = data.secondGuestPercentage !== undefined ? data.secondGuestPercentage : "";
+      }
       discountActiveInput.checked = !!data.isActive;
     } else {
       discountPercentInput.value = "";
+      if (secondDiscountPercentInput) {
+        secondDiscountPercentInput.value = "";
+      }
       discountActiveInput.checked = false;
     }
   }, (error) => {
@@ -441,10 +448,16 @@ function setupRealtimeConfig() {
 
 saveDiscountBtn.addEventListener("click", async () => {
   const percentage = Number(discountPercentInput.value);
+  const secondGuestPercentage = Number(secondDiscountPercentInput.value);
   const isActive = discountActiveInput.checked;
 
   if (isNaN(percentage) || percentage < 0 || percentage > 100) {
-    alert("Please enter a valid percentage between 0 and 100.");
+    alert("Please enter a valid percentage for 1st Guest between 0 and 100.");
+    return;
+  }
+
+  if (isNaN(secondGuestPercentage) || secondGuestPercentage < 0 || secondGuestPercentage > 100) {
+    alert("Please enter a valid percentage for 2nd Guest between 0 and 100.");
     return;
   }
 
@@ -454,6 +467,7 @@ saveDiscountBtn.addEventListener("click", async () => {
   try {
     await setDoc(configDocRef, {
       percentage: percentage,
+      secondGuestPercentage: secondGuestPercentage,
       isActive: isActive,
       updatedAt: new Date().toISOString()
     }, { merge: true });

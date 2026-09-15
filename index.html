@@ -256,10 +256,19 @@
             <!-- Promos Checklist -->
             <div class="space-y-1">
               <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Promos Snagged</p>
-              <div id="global-discount-badge-item" class="flex items-center text-[11px] text-gray-600 space-x-1.5 hidden">
+              
+              <!-- 1st Guest Discount Line -->
+              <div id="first-guest-discount-item" class="flex items-center text-[11px] text-gray-600 space-x-1.5 hidden">
                 <span class="text-emerald-500 font-bold">✓</span>
-                <span><span id="summary-discount-percent">0</span>% Off Guests 1 &amp; 2 Applied</span>
+                <span><span id="summary-discount-percent">0</span>% Off Guest 1</span>
               </div>
+
+              <!-- 2nd Guest Discount Line (Visible only when 2+ guests selected) -->
+              <div id="second-guest-discount-item" class="flex items-center text-[11px] text-gray-600 space-x-1.5 hidden">
+                <span class="text-emerald-500 font-bold">✓</span>
+                <span><span id="summary-second-guest-percent">0</span>% Off Guest 2</span>
+              </div>
+
               <div class="flex items-center text-[11px] text-gray-600 space-x-1.5">
                 <span class="text-emerald-500 font-bold">✓</span>
                 <span>3rd &amp; 4th Guests Sail Free</span>
